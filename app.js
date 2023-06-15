@@ -1,8 +1,17 @@
 const bodyParser = require('body-parser');
 const express = require('express');
-const app = express();
+const mongoose = require('mongoose');
+mongoose.set('strictQuery', true);
 
+const app = express();
 app.use(bodyParser.json());
+
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-with, Content-Type, Accept, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE');
+    next();
+});
 
 const citizenRoutes = require('./routes/citizen-routes');
 const adminRoutes = require('./routes/admin-routes');
@@ -23,4 +32,11 @@ app.use((error, req, res, next) => {
     res.json({ message: error.message || 'An unknown error occured. ' });
 
 })
-app.listen(5000);
+mongoose
+    .connect('mongodb+srv://sonu:helloSonu@cluster0.kfazawl.mongodb.net/CCMS?retryWrites=true&w=majority')
+    .then(() => {
+        app.listen(5000, function () { console.log('Server started on port 5000.') });
+    })
+    .catch(err => {
+        console.log(err);
+    });
