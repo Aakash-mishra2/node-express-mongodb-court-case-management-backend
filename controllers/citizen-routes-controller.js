@@ -1,4 +1,4 @@
-const HttpError = require('../models/Errors');
+const HttpError = require('../models/http_error');
 const { validationResult } = require('express-validator');
 const Citizen = require('../models/citizen');
 
@@ -29,7 +29,7 @@ const getUser = async (req, res, next) => {
     if (!allUsers) {
         return next(new HttpError('Could not find any Users. ', 400));
     }
-    res.status.json({ plaintiffs: allUsers.map(user => user.toObject({ getters: true })) });
+    res.status(200).json({ plaintiffs: allUsers.map(user => user.toObject({ getters: true })) });
 }
 
 const getUserByID = async (req, res, next) => {
@@ -43,7 +43,8 @@ const getUserByID = async (req, res, next) => {
         return next(error);
     }
     if (!identifiedUser) {
-        throw (new HttpError('No user found for this provided ID. '));
+        const error = new HttpError('No user found for this provided ID. ');
+        return next(error);
     }
     res.status(200).json({ foundUser: identifiedUser.toObject({ getters: true }) });
 
@@ -51,10 +52,11 @@ const getUserByID = async (req, res, next) => {
 const createUser = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        throw new HttpError("Invalid request sent. Please send correct input. ");
+        const error = new HttpError("Invalid request sent. Please send correct input. ");
+        return next(error);
     }
 
-    const { name, email, password, idCardNo, } = req.body;
+    const { email, password, name, idCardNo } = req.body;
     let existingUser;
     try {
         existingUser = await Citizen.findOne({ idCardNo: idCardNo });
@@ -74,7 +76,7 @@ const createUser = async (req, res, next) => {
         name,
         email,
         password,
-        image: 'https://---.com',
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTUW3fji-bX-IXJBV6mR90Gr1s-1FOWccw0Ew&usqp=CAU',
         idCardNo,
         cases: []
     });
@@ -82,10 +84,7 @@ const createUser = async (req, res, next) => {
     try {
         await createdUser.save();
     } catch (err) {
-        const error = new HttpError(
-            'Signing up failed, please try again.',
-            500
-        );
+        const error = new HttpError('Signing up failed, please try again.', 500);
         return next(error);
     }
     res.status(200).json({ added: createdUser.toObject({ getters: true }) });
@@ -100,14 +99,18 @@ const loginUser = async (req, res, next) => {
         const error = new HttpError('Login to this User failed, please try again later', 500);
         return next(error);
     }
-    if (existingUser || existingUser.password != password) {
+    console.log(req.body);
+    if (!existingUser || existingUser.password != password) {
         const error = new HttpError(' Invalid Credentials, could not log you in.', 401);
         return next(error);
     }
-    res.json({ message: 'Logged In!. ' });
+    res.json({
+        message: 'Logged In!. ',
+        citizen: existingUser.toObject({ getters: true })
+    });
 }
 
-exports.allUser = getUser;
-exports.fetchUser = getUserByCaseID;
+exports.getUser = getUser;
+exports.getUserByID = getUserByID;
 exports.createUser = createUser;
-exports.logUser = loginUser;
+exports.loginUser = loginUser;

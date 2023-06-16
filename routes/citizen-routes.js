@@ -3,8 +3,8 @@ const router = express.Router();
 const { check } = require('express-validator');
 
 const plaintiff = require('../controllers/citizen-routes-controller');
-router.get('/', plaintiff.allUser);
-router.get('/single/:Uid', plainiff.fetchUser);
+router.get('/', plaintiff.getUser);
+router.get('/single/:Uid', plaintiff.getUserByID);
 router.post('/signup',
     [
         check('name').not().isEmpty(),
@@ -12,6 +12,6 @@ router.post('/signup',
         check('password').isLength({ min: 6 })
     ]
     , plaintiff.createUser);
-router.post('/login', plaintiff.logUser);
+router.post('/login', plaintiff.loginUser);
 
 module.exports = router;

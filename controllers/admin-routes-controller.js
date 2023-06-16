@@ -1,4 +1,7 @@
-const HttpError = require('../models/Errors');
+const HttpError = require('../models/http_error');
+const mongoose = require('mongoose');
+mongoose.set('strictQuery', true);
+
 const { validationResult } = require('express-validator');
 const Citizen = require('../models/citizen');
 const Case = require('../models/cases');
@@ -31,11 +34,14 @@ let DUMMY_CASES = [
     }];
 
 const getCasebyID = async (req, res, next) => {
-    const caseID = req.params.cid;
+    const caseID = req.params.cID;
     let item;
     try {
-        item = await Case.findById(cid);
-    } catch (err) { const error = new HttpError('Something went wrong, could not find a case.', 500) };
+        item = await Case.findById(caseID);
+    } catch (err) {
+        const error = new HttpError('Something went wrong, could not find a case.', 500)
+        return next(error);
+    };
     if (!item) {
         const error = new HttpError('Could not find any case by this ID', 500);
         return next(error);
@@ -44,19 +50,19 @@ const getCasebyID = async (req, res, next) => {
 };
 
 const getCasesByUserID = async (req, res, next) => {
-    const userID = req.params.userId;
+    const userID = req.params.uID;
     let thisUserCases;
     try {
-        thisUserCases = await User.findById(userID).populate('cases');
+        thisUserCases = await Citizen.findById(userID).populate('cases');
     } catch (err) {
         const error = new HttpError('Something went wrong, could not find a place.', 500);
         return next(error);
     }
     if (!thisUserCases || thisUserCases.length === 0) {
-        const error = new HttpError('Could not existing cases for the provided user ID.', 404)
+        const error = new HttpError('Could not find existing cases for the provided user ID.', 404)
         return next(error);
     }
-    res.json({ userPlaces: thisUserCases.places.map(item => item.toObject({ getters: true })) });
+    res.json({ allCases: thisUserCases.cases.map(item => item.toObject({ getters: true })) });
 };
 
 const createCase = async (req, res, next) => {
@@ -66,47 +72,54 @@ const createCase = async (req, res, next) => {
         throw new HttpError('Invalid input passed, please check your data.', 420);
     }
 
-    const { id, court, description, location, judge, plaintiff } = req.body;
+    const { court, description, location_city, location_pincode, judge, plaintiff } = req.body;
 
     const newCase = new Case({
-        id,
         court,
         description,
-        location,
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRholMhydH0A3KqdWelqNqBG_YgCPQaOXa2vS2SufTU5w&usqp=CAU&ec=48600113',
+        location: {
+            city: location_city,
+            pincode: location_pincode
+        },
         judge,
         next_hearing: " TO BE DECIDED ",
         status: "NOT ACCEPTED",
         plaintiff
     });
     console.log(newCase);
+    console.log(location_city);
+    console.log(location_pincode);
     let user;
     try {
         user = await Citizen.findById(plaintiff);
     } catch (err) {
-        const error = new HttpError('Creating Case failed, please try again.', 500);
+        const error = new HttpError("Creating Case failed, please try again.", 500);
         return next(error);
     }
+    console.log(user);
+
     if (!user) {
         const error = new HttpError("Could not find user for provided ID. ", 404);
         return next(error);
     }
-    console.log(user);
+    let sess;
     try {
-        const sess = await mongoose.startSession();
+        sess = await mongoose.startSession();
         sess.startTransaction();
+        console.log('1');
         await newCase.save({ session: sess });
-
-        user.cases.push(createdPlace);
+        console.log('2');
+        await user.cases.push(newCase);
+        console.log('3');
         await user.save({ session: sess });
-
+        console.log('4');
         await sess.commitTransaction();
+        console.log('5');
         sess.endSession();
     } catch (err) {
         //either database server is down or database validation fails.
-        const error = new HttpError(
-            'Creating place failed session , please try again.',
-            500
-        );
+        const error = new HttpError("Creating place failed session , please try again.", 500);
         return next(error);
     }
     res.status(200).json({ added_NewCase: newCase });
@@ -166,9 +179,9 @@ const withdrawCase = async (req, res, next) => {
     res.status(201).json({ message: "Deleted Case" })
 }
 
-exports.fetchCase = getCasebyID;
-exports.caseByUser = getCasesByUserID;
-exports.newcase = createCase;
-exports.hearing = updateHearing;
-exports.withdraw = withdrawCase;
+exports.getCasebyID = getCasebyID;
+exports.getCasesByUserID = getCasesByUserID;
+exports.createCase = createCase;
+exports.updateHearing = updateHearing;
+exports.withdrawCase = withdrawCase;
 

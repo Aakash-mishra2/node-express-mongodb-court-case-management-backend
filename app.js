@@ -16,7 +16,7 @@ app.use((req, res, next) => {
 const citizenRoutes = require('./routes/citizen-routes');
 const adminRoutes = require('./routes/admin-routes');
 app.use('/ccms/public', citizenRoutes);
-app.use('/ccms/cases', adminRoutes);
+app.use('/ccms/admin', adminRoutes);
 
 const HttpError = require('./models/http_error');
 app.use((req, res, next) => {
