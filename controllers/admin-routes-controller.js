@@ -6,33 +6,6 @@ const { validationResult } = require('express-validator');
 const Citizen = require('../models/citizen');
 const Case = require('../models/cases');
 
-let DUMMY_CASES = [
-    {
-        id: 'th234',
-        court: 'Supreme Court of India',
-        description: " Land Dispute case ",
-        image: " ",
-        location: {
-            city: "Delhi",
-            pincode: 11232424
-        },
-        judge: "Mr. Suresh Jain",
-        next_hearing: "03 - 06 - 2023",
-        status: "PENDING"
-    },
-    {
-        id: 'lhd4334',
-        court: 'Allahabad High Court ',
-        description: " Defamation case by MLA on opposition leader ",
-        location: {
-            city: "Allahabad, Uttar Pradesh",
-            pincode: 9080980
-        },
-        judge: "Mr. Zakir khan",
-        next_hearing: "07 - 06 - 2023",
-        status: "APPLIED"
-    }];
-
 const getCasebyID = async (req, res, next) => {
     const caseID = req.params.cID;
     let item;
@@ -87,9 +60,6 @@ const createCase = async (req, res, next) => {
         status: "NOT ACCEPTED",
         plaintiff
     });
-    console.log(newCase);
-    console.log(location_city);
-    console.log(location_pincode);
     let user;
     try {
         user = await Citizen.findById(plaintiff);
@@ -107,15 +77,10 @@ const createCase = async (req, res, next) => {
     try {
         sess = await mongoose.startSession();
         sess.startTransaction();
-        console.log('1');
         await newCase.save({ session: sess });
-        console.log('2');
         await user.cases.push(newCase);
-        console.log('3');
         await user.save({ session: sess });
-        console.log('4');
         await sess.commitTransaction();
-        console.log('5');
         sess.endSession();
     } catch (err) {
         //either database server is down or database validation fails.
@@ -149,7 +114,7 @@ const updateHearing = async (req, res, next) => {
 };
 
 const withdrawCase = async (req, res, next) => {
-    const deleteID = req.params.dID;
+    const deleteID = req.params.did;
     let deleteCase;
     try {
         deleteCase = await Case.findById(deleteID).populate('plaintiff');
@@ -158,19 +123,18 @@ const withdrawCase = async (req, res, next) => {
         return next(error);
     }
     if (!deleteCase) {
-        const error = new HttpError('could not find place for this ID', 404);
+        const error = new HttpError('could not find a case by this ID', 404);
         return next(error);
     }
-
+    console.log(deleteCase);
     try {
         const sess2 = await mongoose.startSession();
         sess2.startTransaction();
-
-        await deleteCase.remove({ session: sess2 });
         deleteCase.plaintiff.cases.pull(deleteCase);
         await deleteCase.plaintiff.save({ session: sess2 });
-
+        await Case.deleteOne({ id: deleteID });
         await sess2.commitTransaction();
+        console.log(5);
         sess2.endSession();
     } catch (err) {
         const error = new HttpError(' Something went wrong, could not delete place. ', 500);
