@@ -50,7 +50,7 @@ const createCase = async (req, res, next) => {
     const newCase = new Case({
         court,
         description,
-        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRholMhydH0A3KqdWelqNqBG_YgCPQaOXa2vS2SufTU5w&usqp=CAU&ec=48600113',
+        image: `${process.env.ASSET_URL}`,
         location: {
             city: location_city,
             pincode: location_pincode

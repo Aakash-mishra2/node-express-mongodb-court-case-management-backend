@@ -2,7 +2,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const mongoose = require('mongoose');
 mongoose.set('strictQuery', true);
-
+const PORT = process.env.PORT || 5000;
 const app = express();
 app.use(bodyParser.json());
 
@@ -33,9 +33,9 @@ app.use((error, req, res, next) => {
 
 })
 mongoose
-    .connect('mongodb+srv://sonu:helloSonu@cluster0.kfazawl.mongodb.net/CCMS?retryWrites=true&w=majority')
+    .connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.kfazawl.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`)
     .then(() => {
-        app.listen(5000, function () { console.log('Server started on port 5000.') });
+        app.listen(PORT, function () { console.log('Server started on port 5000.') });
     })
     .catch(err => {
         console.log(err);

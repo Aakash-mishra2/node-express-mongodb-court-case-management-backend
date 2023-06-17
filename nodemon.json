@@ -1,0 +1,8 @@
+{
+    "env": {
+        "DB_USER": "production-user",
+        "DB_PASSWORD": "imexternalUser123",
+        "DB_NAME": "CCMS-prod",
+        "ASSET_URL": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRholMhydH0A3KqdWelqNqBG_YgCPQaOXa2vS2SufTU5w&usqp=CAU&ec=48600113"
+    }
+}
