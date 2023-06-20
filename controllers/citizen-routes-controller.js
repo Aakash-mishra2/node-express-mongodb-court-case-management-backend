@@ -2,26 +2,10 @@ const HttpError = require('../models/http_error');
 const { validationResult } = require('express-validator');
 const Citizen = require('../models/citizen');
 
-const DUMMY_USERS = [{
-    id: "u1",
-    name: "Mr. Joshi",
-    email: 'test@ijk.com',
-    image: '',
-    caseCount: 3,
-    case_id: "th234"
-},
-{
-    id: "u2",
-    name: "Mr. Anand raj",
-    age: 57,
-    image: '',
-    case_id: "lhd4334"
-}
-]
 const getUser = async (req, res, next) => {
     let allUsers;
     try {
-        allUsers = await Citizen.find();
+        allUsers = await Citizen.find({}, "-password -idCardNo");
     } catch (err) {
         const error = new HttpError('Could not get all Users. ', 400);
         return next(error);
@@ -36,7 +20,7 @@ const getUserByID = async (req, res, next) => {
     const us_id = req.params.Uid;
     let identifiedUser;
     try {
-        identifiedUser = await Citizen.findById(us_id);
+        identifiedUser = await Citizen.findById(us_id, "-idCardNo -password");
     }
     catch (err) {
         const error = new HttpError('Could not get this Citizen', 400);
@@ -59,7 +43,7 @@ const createUser = async (req, res, next) => {
     const { email, password, name, idCardNo } = req.body;
     let existingUser;
     try {
-        existingUser = await Citizen.findOne({ idCardNo: idCardNo });
+        existingUser = await Citizen.findOne({ idCardNo: idCardNo }, { password: 0, idCardNo: 0 });
     } catch (err) {
         const error = new HttpError(
             'Signing up failed please try again later. ', 500
@@ -87,14 +71,14 @@ const createUser = async (req, res, next) => {
         const error = new HttpError('Signing up failed, please try again.', 500);
         return next(error);
     }
-    res.status(200).json({ added: createdUser.toObject({ getters: true }) });
+    res.status(200).json({ added: createdUser.name });
 }
 
 const loginUser = async (req, res, next) => {
     const { email, password } = req.body;
     let existingUser;
     try {
-        existingUser = await Citizen.findOne({ email: email });
+        existingUser = await Citizen.findOne({ email: email }, { password: 0 });
     } catch (err) {
         const error = new HttpError('Login to this User failed, please try again later', 500);
         return next(error);
