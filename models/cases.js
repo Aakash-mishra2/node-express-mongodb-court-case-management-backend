@@ -17,3 +17,4 @@ const caseSchema = new Schema({
     plaintiff: { type: mongoose.Types.ObjectId, required: true, ref: 'Citizen' },
 });
 module.exports = mongoose.model('Case', caseSchema);
+//databases ...

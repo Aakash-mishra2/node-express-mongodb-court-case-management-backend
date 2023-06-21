@@ -60,7 +60,7 @@ const createUser = async (req, res, next) => {
         name,
         email,
         password,
-        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTUW3fji-bX-IXJBV6mR90Gr1s-1FOWccw0Ew&usqp=CAU',
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRholMhydH0A3KqdWelqNqBG_YgCPQaOXa2vS2SufTU5w&usqp=CAU&ec=48600113',
         idCardNo,
         cases: []
     });
