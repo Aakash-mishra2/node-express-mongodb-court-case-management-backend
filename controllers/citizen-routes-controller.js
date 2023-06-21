@@ -78,7 +78,7 @@ const loginUser = async (req, res, next) => {
     const { email, password } = req.body;
     let existingUser;
     try {
-        existingUser = await Citizen.findOne({ email: email }, { password: 0 });
+        existingUser = await Citizen.findOne({ email: email });
     } catch (err) {
         const error = new HttpError('Login to this User failed, please try again later', 500);
         return next(error);
@@ -87,6 +87,8 @@ const loginUser = async (req, res, next) => {
         const error = new HttpError(' Invalid Credentials, could not log you in.', 401);
         return next(error);
     }
+    existingUser.password = 0;
+    existingUser.idCardNo = 0;
     res.json({
         message: 'Logged In!. ',
         citizen: existingUser.toObject({ getters: true })
