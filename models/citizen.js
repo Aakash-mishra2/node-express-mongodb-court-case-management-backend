@@ -1,8 +1,7 @@
 const mongoose = require('mongoose');
 const uniqueValidator = require('mongoose-unique-validator');
-const Schema = mongoose.Schema;
 
-const publicSchema = new Schema({
+const publicSchema = new mongoose.Schema({
     name: { type: String, required: true },
     //internal email validation.
     email: { type: String, required: true, unique: true },

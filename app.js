@@ -23,7 +23,7 @@ app.use((req, res, next) => {
     const error = new HttpError("We do not support this route yet.", 404);
     throw error;
 });
-
+//applied on every request with error thrown by express.js
 app.use((error, req, res, next) => {
     if (res.headerSent) {
         return next(error);
