@@ -56,22 +56,22 @@ const createUser = async (req, res, next) => {
         return next(error);
     }
 
-    const createdUser = new Citizen({
+    const newUser = new Citizen({
         name,
         email,
         password,
-        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRholMhydH0A3KqdWelqNqBG_YgCPQaOXa2vS2SufTU5w&usqp=CAU&ec=48600113',
+        image: 'https://static.vecteezy.com/system/resources/previews/022/159/714/original/icon-concept-of-avatar-user-account-for-social-media-with-circle-line-can-be-used-for-technology-business-and-platforms-can-be-applied-to-web-website-poster-mobile-apps-ads-free-vector.jpg',
         idCardNo,
         cases: []
     });
-
+    let createdUser = null;
     try {
-        await createdUser.save();
+        createdUser = await newUser.save();
     } catch (err) {
         const error = new HttpError('Signing up failed, please try again.', 500);
         return next(error);
     }
-    res.status(200).json({ added: createdUser.name });
+    res.status(200).json({ added: {name : createdUser.name, id: createdUser._id.toString()} });
 }
 
 const loginUser = async (req, res, next) => {

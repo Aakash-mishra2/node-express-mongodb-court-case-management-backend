@@ -67,20 +67,19 @@ const createCase = async (req, res, next) => {
         const error = new HttpError("Creating Case failed, please try again.", 500);
         return next(error);
     }
-    console.log(user);
 
     if (!user) {
         const error = new HttpError("Could not find user for provided ID. ", 404);
         return next(error);
     }
-    let sess;
+    let sess = null;
     try {
         sess = await mongoose.startSession();
         sess.startTransaction();
-        await newCase.save({ session: sess });
+        await newCase.save({});
         await user.cases.push(newCase);
-        await user.save({ session: sess });
-        await sess.commitTransaction();
+        await user.save({});
+        sess.commitTransaction();
         sess.endSession();
     } catch (err) {
         //either database server is down or database validation fails.
