@@ -89,6 +89,7 @@ const createCase = async (req, res, next) => {
     res.status(200).json({ added_NewCase: newCase });
 };
 
+
 const updateHearing = async (req, res, next) => {
     const caseID = req.params.cid;
     const { new_status, next_hearing } = req.body;
@@ -97,7 +98,7 @@ const updateHearing = async (req, res, next) => {
     try {
         yourCase = await Case.findById(caseID);
     } catch (err) {
-        const error = new HttpError('Something went wrong, could not find place. ', 500);
+        const error = new HttpError('Something went wrong, could not find case. ', 500);
         return next(error);
     }
 

@@ -1,7 +1,7 @@
 const HttpError = require('../models/http_error');
 const { validationResult } = require('express-validator');
 const Citizen = require('../models/citizen');
-
+const Case = require('../models/cases');
 const getUser = async (req, res, next) => {
     let allUsers;
     try {
@@ -94,8 +94,28 @@ const loginUser = async (req, res, next) => {
         citizen: existingUser.toObject({ getters: true })
     });
 }
-
+const updateUserCase = async(req, res, next) => {
+    const citID = req.params.cid;
+    const { cardNo, description } = req.body;
+    let selectedCase;
+    try{
+        selectedCase = await Case.findById(citID);
+    } catch(err){
+        const error = new HttpError('Something went wrong! Could not find case!', 500);
+        return  next(error);
+    }
+    selectedCase.description = description;
+    try{
+        await selectedCase.save();
+    }
+    catch(err){
+        const error = " Could not update case. Try again later!";
+        return next(error);
+    }
+    res.status(200).json({ message: "Your case " + citID + " is updated. "});
+};
 exports.getUser = getUser;
 exports.getUserByID = getUserByID;
 exports.createUser = createUser;
 exports.loginUser = loginUser;
+exports.updateUserCase = updateUserCase;
