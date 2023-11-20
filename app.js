@@ -13,16 +13,20 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use('/ccms',(req, res, next) => {
-    res.json({
-        welcome: 'Welcome to court case management system. Please follow README file to execute all requests on routes',
-    });
-})
-
 const citizenRoutes = require('./routes/citizen-routes');
 const adminRoutes = require('./routes/admin-routes');
 app.use('/ccms/public', citizenRoutes);
 app.use('/ccms/admin', adminRoutes);
+
+
+app.use('/ccms',(req, res, next) => {
+    res.json({
+        welcome: 'Welcome to court case management system. Please follow README file for API Documentation',
+        ReadMe: 'https://github.com/Aakash-mishra2/node-express-mongodb-court-case-management-backend#readme'
+    });
+})
+
+
 
 const HttpError = require('./models/http_error');
 app.use((req, res, next) => {

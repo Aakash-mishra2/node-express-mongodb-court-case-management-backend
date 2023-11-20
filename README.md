@@ -30,7 +30,7 @@ GET      https://courtroom-admin.onrender.com/ccms/public/single/:id
 Path Variable: id : registered id of person\
 EXAMPLE REQUEST:\
  id:    648dc77b1a7197fd8ac31388 \
-EXAMPLE RESPONSE:\
+EXAMPLE RESPONSE:
 ```
 {
   "foundUser": {
@@ -57,7 +57,7 @@ Request Body:\
     name: REQUIRED, name of new user,\
     idCardNo: UNIQUE Aadhar Card No. 12 Digit of new user\
 }\
-EXAMPLE REQUEST\
+EXAMPLE REQUEST
 ```
 BODY
 {
@@ -67,7 +67,7 @@ BODY
   "idCardNo": "798798979879"
 }
 ```
-EXAMPLE RESPONSE\
+EXAMPLE RESPONSE
 ```
 {
   "added": {
