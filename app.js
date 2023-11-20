@@ -13,6 +13,12 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use('/ccms',(req, res, next) => {
+    res.json({
+        welcome: 'Welcome to court case management system. Please follow README file to execute all requests on routes',
+    });
+})
+
 const citizenRoutes = require('./routes/citizen-routes');
 const adminRoutes = require('./routes/admin-routes');
 app.use('/ccms/public', citizenRoutes);

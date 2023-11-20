@@ -13,5 +13,5 @@ router.post('/signup',
     ]
     , plaintiff.createUser);
 router.post('/login', plaintiff.loginUser);
-router.post('/update/:cid', plaintiff.updateUserCase);
+router.patch('/update/:cid', plaintiff.updateUserCase);
 module.exports = router;
