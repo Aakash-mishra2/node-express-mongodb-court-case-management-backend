@@ -2,6 +2,8 @@ const HttpError = require('../models/http_error');
 const { validationResult } = require('express-validator');
 const Citizen = require('../models/citizen');
 const Case = require('../models/cases');
+const jwt = require('jsonwebtoken');
+
 const getUser = async (req, res, next) => {
     let allUsers;
     try {
@@ -75,10 +77,13 @@ const createUser = async (req, res, next) => {
 }
 
 const loginUser = async (req, res, next) => {
+    console.log('request', req.body);
+    console.log('login user invoked');
     const { email, password } = req.body;
     let existingUser;
     try {
         existingUser = await Citizen.findOne({ email: email });
+        //
     } catch (err) {
         const error = new HttpError('Login to this User failed, please try again later', 500);
         return next(error);

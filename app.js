@@ -1,3 +1,4 @@
+require('dotenv').config();
 const bodyParser = require('body-parser');
 const express = require('express');
 const mongoose = require('mongoose');
@@ -39,9 +40,10 @@ app.use((error, req, res, next) => {
     res.status(error.errorCode || 500);
     res.json({ message: error.message || 'An unknown error occured. ' });
 
-})
+});
+const db = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.kfazawl.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 mongoose
-    .connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.kfazawl.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`)
+    .connect(db)
     .then(() => {
         app.listen(PORT, function () { console.log('Server started on port 5000.') });
     })
