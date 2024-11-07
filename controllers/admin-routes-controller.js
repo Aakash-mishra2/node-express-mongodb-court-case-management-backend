@@ -24,18 +24,38 @@ const getCasebyID = async (req, res, next) => {
 
 const getCasesByUserID = async (req, res, next) => {
     const userID = req.params.uID;
-    let thisUserCases;
+    let thisUserCases, closedCases;
     try {
         thisUserCases = await Citizen.findById(userID).populate('cases');
-    } catch (err) {
-        const error = new HttpError('Something went wrong, could not find a place.', 500);
+    }
+    catch (err) {
+        const error = new HttpError('Something went wrong, could not find a case.', 500);
         return next(error);
     }
+    const totalCasesLength = thisUserCases.cases.length;
+    try {
+        closedCases = await Citizen.findById(userID).populate({
+            path: 'cases',
+            match: { status: 'closed' }
+        });
+    }
+
+    catch (err) {
+        const error = new HttpError('Closed cases not found!', 500);
+        return next(error);
+    }
+    const closedCasesLength = closedCases.cases.length;
+    const activeCasesLength = totalCasesLength - closedCasesLength;
     if (!thisUserCases || thisUserCases.length === 0) {
         const error = new HttpError('Could not find existing cases for the provided user ID.', 404)
         return next(error);
     }
-    res.json({ allCases: thisUserCases.cases.map(item => item.toObject({ getters: true })) });
+    res.json({
+        activeCases: activeCasesLength,
+        closedCases: closedCasesLength,
+        totalCases: totalCasesLength,
+        allCases: thisUserCases.cases.map(item => item.toObject({ getters: true }))
+    });
 };
 
 const createCase = async (req, res, next) => {
@@ -45,24 +65,18 @@ const createCase = async (req, res, next) => {
         throw new HttpError('Invalid input passed, please check your data.', 420);
     }
 
-    const { court, description, location_city, location_pincode, judge, plaintiff } = req.body;
-
+    const { userId, caseType, registrationFees, description } = req.body;
     const newCase = new Case({
-        court,
-        description,
-        image: `${process.env.ASSET_URL}`,
-        location: {
-            city: location_city,
-            pincode: location_pincode
-        },
-        judge,
-        next_hearing: " TO BE DECIDED ",
-        status: "NOT ACCEPTED",
-        plaintiff
+        caseType,
+        summary: description,
+        next_hearing: "",
+        status: "Filed",
+        plaintiff: userId,
+        registrationFees,
     });
     let user;
     try {
-        user = await Citizen.findById(plaintiff);
+        user = await Citizen.findById(userId);
     } catch (err) {
         const error = new HttpError("Creating Case failed, please try again.", 500);
         return next(error);
@@ -82,8 +96,9 @@ const createCase = async (req, res, next) => {
         sess.commitTransaction();
         sess.endSession();
     } catch (err) {
+        console.log(err);
         //either database server is down or database validation fails.
-        const error = new HttpError("Creating place failed session , please try again.", 500);
+        const error = new HttpError("Creating case failed session , please try again.", 500);
         return next(error);
     }
     res.status(200).json({ added_NewCase: newCase });
@@ -91,19 +106,26 @@ const createCase = async (req, res, next) => {
 
 
 const updateHearing = async (req, res, next) => {
-    const caseID = req.params.cid;
-    const { new_status, next_hearing } = req.body;
+    const { caseId, new_status, next_hearing_date, next_hearing_timings, courtName, courtAddress, courtId } = req.body;
+    const caseID = caseId;
 
     let yourCase;
     try {
-        yourCase = await Case.findById(caseID);
+        yourCase = await Case.findById(caseId);
     } catch (err) {
         const error = new HttpError('Something went wrong, could not find case. ', 500);
         return next(error);
     }
-
     yourCase.status = new_status;
-    yourCase.next_hearing = next_hearing;
+    yourCase.nextHearing = {
+        date: next_hearing_date,
+        timings: next_hearing_timings,
+    };
+    yourCase.court = {
+        courtName,
+        courtAddress,
+        courtId
+    };
     try {
         await yourCase.save();
     } catch (err) {
@@ -113,8 +135,37 @@ const updateHearing = async (req, res, next) => {
     res.status(200).json({ message: " Your case " + caseID + " is updated. " });
 };
 
+const updateLawyer = async (req, res, next) => {
+    const { caseId, new_status, judgeName, judgeId, lawyerName, lawyerId } = req.body;
+    const caseID = caseId;
+    let yourCase;
+    try {
+        yourCase = await Case.findById(caseID);
+    } catch (err) {
+        const error = new HttpError('Something went wrong, could not find case. ', 500);
+        return next(error);
+    }
+    yourCase.status = new_status,
+        yourCase.judge = {
+            judgeName,
+            judgeId,
+        };
+    yourCase.lawyer = {
+        lawyerName,
+        lawyerId,
+    };
+    try {
+        await yourCase.save();
+    } catch (err) {
+        const error = new HttpError('Something went wrong, could not update Case. ', 500);
+        return next(error);
+    }
+    res.status(200).json({ message: " Your case " + caseID + " is updated. " });
+
+}
+
 const withdrawCase = async (req, res, next) => {
-    const deleteID = req.params.did;
+    const deleteID = req.params.cID;
     let deleteCase;
     try {
         deleteCase = await Case.findById(deleteID).populate('plaintiff');
@@ -147,5 +198,6 @@ exports.getCasebyID = getCasebyID;
 exports.getCasesByUserID = getCasesByUserID;
 exports.createCase = createCase;
 exports.updateHearing = updateHearing;
+exports.updateLawyer = updateLawyer;
 exports.withdrawCase = withdrawCase;
 

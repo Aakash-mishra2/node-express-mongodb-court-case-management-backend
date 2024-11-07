@@ -20,7 +20,7 @@ app.use('/ccms/public', citizenRoutes);
 app.use('/ccms/admin', adminRoutes);
 
 
-app.use('/ccms',(req, res, next) => {
+app.use('/ccms', (req, res, next) => {
     res.json({
         welcome: 'Welcome to court case management system. Please follow README file for API Documentation and access all routes',
         ReadMe: 'https://github.com/Aakash-mishra2/node-express-mongodb-court-case-management-backend#readme'
@@ -32,6 +32,7 @@ app.use((req, res, next) => {
     const error = new HttpError("We do not support this route yet.", 404);
     throw error;
 });
+
 //applied on every request with error thrown by express.js
 app.use((error, req, res, next) => {
     if (res.headerSent) {
@@ -45,7 +46,7 @@ const db = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@clus
 mongoose
     .connect(db)
     .then(() => {
-        app.listen(PORT, function () { console.log('Server started on port 5000.') });
+        app.listen(5000, function () { console.log('Server started on port 5000.'); });
     })
     .catch(err => {
         console.log(err);
