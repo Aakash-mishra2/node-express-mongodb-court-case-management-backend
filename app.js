@@ -16,9 +16,11 @@ app.use((req, res, next) => {
 
 const citizenRoutes = require('./routes/citizen-routes');
 const adminRoutes = require('./routes/admin-routes');
+const otpRoutes = require('./routes/otp-routes.js');
+
 app.use('/ccms/public', citizenRoutes);
 app.use('/ccms/admin', adminRoutes);
-
+app.use('/ccms/otp', otpRoutes);
 
 app.use('/ccms', (req, res, next) => {
     res.json({

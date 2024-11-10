@@ -1,6 +1,15 @@
 const HttpError = require('../models/http_error');
 const mongoose = require('mongoose');
 mongoose.set('strictQuery', true);
+const express = require('express');
+const otpGenerator = require('otp-generator');
+const twilio = require('twilio');
+const axios = require('axios');
+
+const app = express();
+const otps = {};
+
+app.use(express.json());
 
 const { validationResult } = require('express-validator');
 const Citizen = require('../models/citizen');
@@ -12,7 +21,7 @@ const getCasebyID = async (req, res, next) => {
     try {
         item = await Case.findById(caseID);
     } catch (err) {
-        const error = new HttpError('Something went wrong, could not find a case.', 500)
+        const error = new HttpError('Something went wrong, could not find a case.', 500);
         return next(error);
     };
     if (!item) {
@@ -47,7 +56,7 @@ const getCasesByUserID = async (req, res, next) => {
     const closedCasesLength = closedCases.cases.length;
     const activeCasesLength = totalCasesLength - closedCasesLength;
     if (!thisUserCases || thisUserCases.length === 0) {
-        const error = new HttpError('Could not find existing cases for the provided user ID.', 404)
+        const error = new HttpError('Could not find existing cases for the provided user ID.', 404);
         return next(error);
     }
     res.json({
@@ -57,6 +66,44 @@ const getCasesByUserID = async (req, res, next) => {
         allCases: thisUserCases.cases.map(item => item.toObject({ getters: true }))
     });
 };
+
+const createNewCase = async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        console.log(errors);
+        throw new HttpErrors('Invalid request body pased.', 400);
+    }
+    console.log(req.body);
+
+    let user;
+    try {
+        user = await Citizen.findById("648db724c8dfa0ec049c6cbd");
+    } catch (err) {
+        const error = new HttpError("Creating Case failed, please try again.", 500);
+        return next(error);
+    }
+
+    const newCase = new Case({
+        caseTitle: req.body.caseTitle,
+        summary: req.body.summary,
+        judge: req.body.judge,
+        lawyer: req.body.lawyer,
+        court: req.body.court,
+        nextHearing: req.body.nextHearing,
+        status: req.body.status
+    });
+    let sess = null;
+    try {
+        await newCase.save({});
+        await user.cases.push(newCase);
+        await user.save({});
+    }
+    catch (err) {
+        const error = new HttpError("New error found!", 500);
+        console.log(error);
+    }
+    res.status(200).json({ message: "New case added" });
+}
 
 const createCase = async (req, res, next) => {
     const errors = validationResult(req);
@@ -194,10 +241,48 @@ const withdrawCase = async (req, res, next) => {
     res.status(201).json({ message: "Deleted Case" })
 }
 
+const generateOtp = async (req, res, next) => {
+    const base_url = 'https://www.fast2sms.com/dev/bulkV2';
+    const { phoneNumber, userId } = req.body;
+    const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false });
+    try {
+        const response = await axios.post('https://www.fast2sms.com/dev/bulkV2', {
+            sender_id: 'TXTIND',
+            message: `Your OTP is ${otp}`,
+            route: 'v3',
+            numbers: phoneNumber,
+        }, {
+            headers: {
+                authorization: 'ZKk6e1u8y90t3LFAM7XvEbzQ2IpfRGHJsWc4rBDP5qVnxldTOiJtgp4hLquMrGS09aivCXfAYk8cDQ3V'
+            }
+        });
+    } catch (error) {
+        console.error('Error sending OTP:', error);
+    }
+};
+
+const verifyOtp = async (req, res, next) => {
+    const { userId, otp } = req.body;
+    const storedOtpData = otps[userId];
+
+    if (!storedOtpData) return res.status(400).json({ message: 'Invalid or expired OTP' });
+
+    const { otp: storedOtp, expiresAt } = storedOtpData;
+    if (storedOtp != otp || Date.now() > expiresAt) {
+        return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+
+    //OTP is valid, delete it from storage
+    delete otps[userId];
+    res.status(200).json({ message: 'OTP verified successfully' });
+}
+
 exports.getCasebyID = getCasebyID;
 exports.getCasesByUserID = getCasesByUserID;
 exports.createCase = createCase;
+exports.createNewCase = createNewCase;
 exports.updateHearing = updateHearing;
 exports.updateLawyer = updateLawyer;
 exports.withdrawCase = withdrawCase;
-
+exports.generateOtp = generateOtp;
+exports.verifyOtp = verifyOtp;

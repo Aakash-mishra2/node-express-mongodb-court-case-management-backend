@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const uniqueValidator = require('mongoose-unique-validator');
 
-const publicSchema = new mongoose.Schema({
+const lawyerSchema = new mongoose.Schema({
     id: {
         type: Number,
         minLength: 12,
@@ -31,7 +31,7 @@ const publicSchema = new mongoose.Schema({
         type: mongoose.Types.ObjectId,
         required: true,
         ref: 'Case'
-    }],
+    }]
+});
 
-
-})
+module.exports = mongoose.model('Lawyer', lawyerSchema);

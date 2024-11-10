@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const Schema = mongoose.Schema;
 //image always is a URL in database to make managing easy.
 const judgeSchema = new Schema({
@@ -55,8 +54,9 @@ const caseSchema = new Schema({
     lawyer: lawyerSchema,
     court: courtSchema,
     nextHearing: hearingSchema,
-    summary: { type: String, required: true },
-    registrationFees: { type: String, required: true },
+    caseTitle: { type: String, required: false },
+    summary: { type: String, required: false },
+    registrationFees: { type: String, required: false },
     status: { type: String, required: false },
     plaintiff: { type: mongoose.Types.ObjectId, required: true, ref: 'Citizen' },
 });
