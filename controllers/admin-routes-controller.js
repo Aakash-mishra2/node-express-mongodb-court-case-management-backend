@@ -224,7 +224,6 @@ const withdrawCase = async (req, res, next) => {
         const error = new HttpError('could not find a case by this ID', 404);
         return next(error);
     }
-    console.log(deleteCase);
     try {
         const sess2 = await mongoose.startSession();
         sess2.startTransaction();
@@ -232,7 +231,6 @@ const withdrawCase = async (req, res, next) => {
         await deleteCase.plaintiff.save({ session: sess2 });
         await Case.deleteOne({ id: deleteID });
         await sess2.commitTransaction();
-        console.log(5);
         sess2.endSession();
     } catch (err) {
         const error = new HttpError(' Something went wrong, could not delete place. ', 500);

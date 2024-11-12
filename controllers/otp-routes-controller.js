@@ -87,7 +87,6 @@ const verifyOtp = async (req, res) => {
 
 const sendPhoneCode = async (req, res, next) => {
     const { phoneNumber } = req.body;
-    console.log('triger send verification!');
     if (!phoneNumber) {
         return res.status(400).json({ error: 'Phone number is required' });
     }

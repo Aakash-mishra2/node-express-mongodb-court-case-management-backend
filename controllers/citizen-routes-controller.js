@@ -73,12 +73,10 @@ const createUser = async (req, res, next) => {
         const error = new HttpError('Signing up failed, please try again.', 500);
         return next(error);
     }
-    res.status(200).json({ added: {name : createdUser.name, id: createdUser._id.toString()} });
+    res.status(200).json({ added: { name: createdUser.name, id: createdUser._id.toString() } });
 }
 
 const loginUser = async (req, res, next) => {
-    console.log('request', req.body);
-    console.log('login user invoked');
     const { email, password } = req.body;
     let existingUser;
     try {
@@ -99,25 +97,25 @@ const loginUser = async (req, res, next) => {
         citizen: existingUser.toObject({ getters: true })
     });
 }
-const updateUserCase = async(req, res, next) => {
+const updateUserCase = async (req, res, next) => {
     const citID = req.params.cid;
     const { cardNo, description } = req.body;
     let selectedCase;
-    try{
+    try {
         selectedCase = await Case.findById(citID);
-    } catch(err){
+    } catch (err) {
         const error = new HttpError('Something went wrong! Could not find case!', 500);
-        return  next(error);
+        return next(error);
     }
     selectedCase.description = description;
-    try{
+    try {
         await selectedCase.save();
     }
-    catch(err){
+    catch (err) {
         const error = " Could not update case. Try again later!";
         return next(error);
     }
-    res.status(200).json({ message: "Your case " + citID + " is updated. "});
+    res.status(200).json({ message: "Your case " + citID + " is updated. " });
 };
 exports.getUser = getUser;
 exports.getUserByID = getUserByID;
