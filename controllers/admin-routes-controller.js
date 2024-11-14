@@ -77,9 +77,9 @@ const createNewCase = async (req, res, next) => {
 
     let user;
     try {
-        user = await Citizen.findById("648db724c8dfa0ec049c6cbd");
+        user = await Citizen.findById(req.body.userId);
     } catch (err) {
-        const error = new HttpError("Creating Case failed, please try again.", 500);
+        const error = new HttpError("Could not find user, please try again.", 500);
         return next(error);
     }
 
@@ -90,7 +90,8 @@ const createNewCase = async (req, res, next) => {
         lawyer: req.body.lawyer,
         court: req.body.court,
         nextHearing: req.body.nextHearing,
-        status: req.body.status
+        status: req.body.status,
+        documents: req.body.documents,
     });
     let sess = null;
     try {
@@ -102,7 +103,8 @@ const createNewCase = async (req, res, next) => {
         const error = new HttpError("New error found!", 500);
         console.log(error);
     }
-    res.status(200).json({ message: "New case added" });
+    //scope to add encryption and decryption using jwt
+    res.status(200).json({ message: "New case added", caseObject: newCase });
 }
 
 const createCase = async (req, res, next) => {

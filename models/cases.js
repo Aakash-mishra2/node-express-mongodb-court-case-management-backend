@@ -48,6 +48,25 @@ const hearingSchema = new Schema({
     },
 });
 
+const documentsSchema = new Schema({
+    documentId: {
+        type: String,
+        required: false,
+    },
+    label: {
+        type: String,
+        required: false,
+    },
+    fileName: {
+        type: String,
+        required: false,
+    },
+    fileId: {
+        type: String,
+        required: true
+    }
+})
+
 
 const caseSchema = new Schema({
     judge: judgeSchema,
@@ -59,6 +78,7 @@ const caseSchema = new Schema({
     registrationFees: { type: String, required: false },
     status: { type: String, required: false },
     plaintiff: { type: mongoose.Types.ObjectId, required: true, ref: 'Citizen' },
+    documents: [documentsSchema]
 });
 module.exports = mongoose.model('Case', caseSchema);
 //databases ...

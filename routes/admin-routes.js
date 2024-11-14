@@ -6,7 +6,7 @@ const admin = require('../controllers/admin-routes-controller');
 
 router.get('/:cID', admin.getCasebyID);
 router.get('/user/:uID', admin.getCasesByUserID);
-router.post('/newcase', admin.createCase);
+router.post('/newcase', admin.createNewCase);
 router.post("/createCase", admin.createNewCase);
 router.patch('/update_case', admin.updateHearing);
 router.patch('/update_lawyer', admin.updateLawyer);
