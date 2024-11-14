@@ -17,21 +17,12 @@ const publicSchema = new mongoose.Schema({
         required: true,
         minLength: 6
     },
-    image: {
-        type: String,
-        required: true
-    },
-    idCardNo: {
-        type: Number,
-        minLength: 12,
-        unique: true
-    },
-    cases: [{
+    cars: [{
         type: mongoose.Types.ObjectId,
         required: true,
-        ref: 'Case'
+        ref: 'Car'
     }],
 });
 
 publicSchema.plugin(uniqueValidator);
-module.exports = mongoose.model('Citizen', publicSchema);
+module.exports = mongoose.model('User', publicSchema);

@@ -19,14 +19,12 @@ app.use((req, res, next) => {
     next();
 });
 
-const citizenRoutes = require('./routes/citizen-routes');
-const adminRoutes = require('./routes/admin-routes');
-const otpRoutes = require('./routes/otp-routes.js');
+const userRoutes = require('./routes/user-routes.js');
+const carRoutes = require('./routes/car-routes.js');
 
-app.use('/ccms/public', citizenRoutes);
-app.use('/ccms/admin', adminRoutes);
-app.use('/ccms/otp', otpRoutes);
 
+app.use('/cms/user', userRoutes);
+app.use('/cms/car', carRoutes);
 
 //applied on every request with error thrown by express.js
 app.use((error, req, res, next) => {
