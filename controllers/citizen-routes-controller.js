@@ -81,9 +81,8 @@ const loginUser = async (req, res, next) => {
     let existingUser;
     try {
         existingUser = await Citizen.findOne({ email: email });
-        //
     } catch (err) {
-        const error = new HttpError('Login to this User failed, please try again later', 500);
+        const error = new HttpError('Login failed, please try again later', 500);
         return next(error);
     }
     if (!existingUser || existingUser.password != password) {

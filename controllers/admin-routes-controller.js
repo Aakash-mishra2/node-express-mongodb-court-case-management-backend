@@ -73,35 +73,41 @@ const createNewCase = async (req, res, next) => {
         console.log(errors);
         throw new HttpErrors('Invalid request body pased.', 400);
     }
-    console.log(req.body);
+    const { caseType, description, district, documents, registrationFees, state, userAadhar, userId } = req.body;
 
     let user;
     try {
-        user = await Citizen.findById(req.body.userId);
+        user = await Citizen.findById(userId);
     } catch (err) {
         const error = new HttpError("Could not find user, please try again.", 500);
         return next(error);
     }
 
     const newCase = new Case({
-        caseTitle: req.body.caseTitle,
-        summary: req.body.summary,
-        judge: req.body.judge,
-        lawyer: req.body.lawyer,
-        court: req.body.court,
-        nextHearing: req.body.nextHearing,
-        status: req.body.status,
-        documents: req.body.documents,
+        caseTitle: "New Application",
+        registration: registrationFees,
+        aadharNo: userAadhar,
+        summary: description,
+        userAddress: { state, district },
+        caseType: caseType,
+        status: "Filed",
+        documents: documents,
+        plaintiff: userId,
     });
+
     let sess = null;
     try {
+        sess = await mongoose.startSession();
+        sess.startTransaction();
         await newCase.save({});
         await user.cases.push(newCase);
         await user.save({});
+        sess.commitTransaction();
+        sess.endSession();
     }
     catch (err) {
         const error = new HttpError("New error found!", 500);
-        console.log(error);
+        console.log(err);
     }
     //scope to add encryption and decryption using jwt
     res.status(200).json({ message: "New case added", caseObject: newCase });
@@ -155,7 +161,7 @@ const createCase = async (req, res, next) => {
 
 
 const updateHearing = async (req, res, next) => {
-    const { caseId, new_status, next_hearing_date, next_hearing_timings, courtName, courtAddress, courtId } = req.body;
+    const { caseId, casetitle, new_status, next_hearing_date, next_hearing_timings, courtName, courtAddress, courtId } = req.body;
     const caseID = caseId;
 
     let yourCase;
@@ -165,6 +171,7 @@ const updateHearing = async (req, res, next) => {
         const error = new HttpError('Something went wrong, could not find case. ', 500);
         return next(error);
     }
+    yourCase.title = casetitle;
     yourCase.status = new_status;
     yourCase.nextHearing = {
         date: next_hearing_date,

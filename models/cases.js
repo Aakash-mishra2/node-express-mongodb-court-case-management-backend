@@ -67,16 +67,28 @@ const documentsSchema = new Schema({
     }
 })
 
+const addressSchema = new Schema({
+    state: {
+        type: String,
+        required: true,
+    },
+    district: {
+        type: String,
+        required: false,
+    }
+})
 
 const caseSchema = new Schema({
     judge: judgeSchema,
     lawyer: lawyerSchema,
     court: courtSchema,
     nextHearing: hearingSchema,
+    caseType: { type: String, required: false },
     caseTitle: { type: String, required: false },
     summary: { type: String, required: false },
     registrationFees: { type: String, required: false },
     status: { type: String, required: false },
+    userAddress: addressSchema,
     plaintiff: { type: mongoose.Types.ObjectId, required: true, ref: 'Citizen' },
     documents: [documentsSchema]
 });
