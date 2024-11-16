@@ -23,7 +23,7 @@ const lawyerSchema = new Schema({
     },
 });
 const courtSchema = new Schema({
-    courtname: {
+    courtName: {
         type: String,
         required: false,
     },
@@ -53,7 +53,7 @@ const documentsSchema = new Schema({
         type: String,
         required: false,
     },
-    label: {
+    fileTitle: {
         type: String,
         required: false,
     },

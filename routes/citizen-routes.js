@@ -3,7 +3,6 @@ const router = express.Router();
 const { check } = require('express-validator');
 
 const plaintiff = require('../controllers/citizen-routes-controller');
-router.get('/', plaintiff.getUser);
 router.get('/single/:Uid', plaintiff.getUserByID);
 router.post('/signup',
     [
