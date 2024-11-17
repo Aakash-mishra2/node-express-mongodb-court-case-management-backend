@@ -15,59 +15,17 @@ const { validationResult } = require('express-validator');
 const Citizen = require('../models/citizen');
 const Case = require('../models/cases');
 
-const getCasebyID = async (req, res, next) => {
-    const caseID = req.params.cID;
-    let item;
+const getAllCases = async (req, res, next) => {
+    const { aId } = req.params;
+    const filter = req.query;
+    let allCases;
     try {
-        item = await Case.findById(caseID);
-    } catch (err) {
-        const error = new HttpError('Something went wrong, could not find a case.', 500);
-        return next(error);
-    };
-    if (!item) {
-        const error = new HttpError('Could not find any case by this ID', 500);
-        return next(error);
-    }
-    res.status(200).json({ foundCase: item.toObject({ getters: true }) });
-};
-
-const getCasesByUserID = async (req, res, next) => {
-    const userID = req.params.uID;
-    const { filter } = req.body;
-    let thisUserCases, closedCases;
-    const populateOptions = { path: 'cases' };
-    if (filter && filter.status) populateOptions.match = { status: filter.status };
-    try {
-        thisUserCases = await Citizen.findById(userID).populate(populateOptions);
+        allCases = await Case.find(filter);
     }
     catch (err) {
-        const error = new HttpError('Something went wrong, could not find a case.', 500);
-        return next(error);
+        console.log('FETCH ALL CASES ERROR: ', err, 'Please try again');
     }
-    const totalCasesLength = thisUserCases.cases.length;
-    try {
-        closedCases = await Citizen.findById(userID).populate({
-            path: 'cases',
-            match: { status: 'closed' }
-        });
-    }
-
-    catch (err) {
-        const error = new HttpError('Closed cases not found!', 500);
-        return next(error);
-    }
-    const closedCasesLength = closedCases.cases.length;
-    const activeCasesLength = totalCasesLength - closedCasesLength;
-    if (!thisUserCases || thisUserCases.length === 0) {
-        const error = new HttpError('Could not find existing cases for the provided user ID.', 404);
-        return next(error);
-    }
-    res.json({
-        activeCases: activeCasesLength,
-        closedCases: closedCasesLength,
-        totalCases: totalCasesLength,
-        allCases: thisUserCases.cases.map(item => item.toObject({ getters: true }))
-    });
+    res.status(200).json({ message: "Founds matching cases after filtering", data: allCases });
 };
 
 const createNewCase = async (req, res, next) => {
@@ -242,12 +200,13 @@ const verifyOtp = async (req, res, next) => {
     delete otps[userId];
     res.status(200).json({ message: 'OTP verified successfully' });
 }
+module.exports = {
+    getAllCases,
+    createNewCase,
+    updateHearing,
+    updateLawyer,
+    withdrawCase,
+    generateOtp,
+    verifyOtp,
+};
 
-exports.getCasebyID = getCasebyID;
-exports.getCasesByUserID = getCasesByUserID;
-exports.createNewCase = createNewCase;
-exports.updateHearing = updateHearing;
-exports.updateLawyer = updateLawyer;
-exports.withdrawCase = withdrawCase;
-exports.generateOtp = generateOtp;
-exports.verifyOtp = verifyOtp;

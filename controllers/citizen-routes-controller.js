@@ -27,7 +27,7 @@ const createUser = async (req, res, next) => {
         return next(error);
     }
 
-    const { email, password, name, idCardNo } = req.body;
+    const { email, password, name, idCardNo, role = 'user' } = req.body;
     let existingUser;
     try {
         existingUser = await Citizen.findOne({ idCardNo: idCardNo }, { password: 0, idCardNo: 0 });
@@ -39,7 +39,7 @@ const createUser = async (req, res, next) => {
     }
 
     if (existingUser) {
-        const error = new HttpError('Signup failed, user exists already, please login instead.', 401);
+        const error = new HttpError(`Failed, ${role} exists already, Try login.`, 401);
         return next(error);
     }
 
@@ -49,8 +49,10 @@ const createUser = async (req, res, next) => {
         password,
         image: 'https://static.vecteezy.com/system/resources/previews/022/159/714/original/icon-concept-of-avatar-user-account-for-social-media-with-circle-line-can-be-used-for-technology-business-and-platforms-can-be-applied-to-web-website-poster-mobile-apps-ads-free-vector.jpg',
         idCardNo,
-        cases: []
+        role,
+        ...(role === 'user' && { cases: [] })
     });
+
     let createdUser = null;
     try {
         createdUser = await newUser.save();
@@ -81,27 +83,49 @@ const loginUser = async (req, res, next) => {
         citizen: existingUser.toObject({ getters: true })
     });
 }
-const updateUserCase = async (req, res, next) => {
-    const citID = req.params.cid;
-    const { cardNo, description } = req.body;
-    let selectedCase;
+
+const getCasesByUserId = async (req, res, next) => {
+    const { id } = req.params;
+    const { filter } = req.body;
+    let thisUserCases, closedCases;
+    const populateOptions = { path: 'cases' };
+    if (filter && filter.status) populateOptions.match = { status: filter.status };
     try {
-        selectedCase = await Case.findById(citID);
-    } catch (err) {
-        const error = new HttpError('Something went wrong! Could not find case!', 500);
-        return next(error);
-    }
-    selectedCase.description = description;
-    try {
-        await selectedCase.save();
+        thisUserCases = await Citizen.findById(id).populate(populateOptions);
     }
     catch (err) {
-        const error = " Could not update case. Try again later!";
+        const error = new HttpError('Something went wrong, could not find a case.', 500);
         return next(error);
     }
-    res.status(200).json({ message: "Your case " + citID + " is updated. " });
-};
-exports.getUserByID = getUserByID;
-exports.createUser = createUser;
-exports.loginUser = loginUser;
-exports.updateUserCase = updateUserCase;
+    const totalCasesLength = thisUserCases.cases.length;
+    try {
+        closedCases = await Citizen.findById(id).populate({
+            path: 'cases',
+            match: { status: 'closed' }
+        });
+    }
+
+    catch (err) {
+        const error = new HttpError('Closed cases not found!', 500);
+        return next(error);
+    }
+    const closedCasesLength = closedCases.cases.length;
+    const activeCasesLength = totalCasesLength - closedCasesLength;
+    if (!thisUserCases || thisUserCases.length === 0) {
+        const error = new HttpError('Could not find existing cases for the provided user ID.', 404);
+        return next(error);
+    }
+    res.json({
+        activeCases: activeCasesLength,
+        closedCases: closedCasesLength,
+        totalCases: totalCasesLength,
+        allCases: thisUserCases.cases.map(item => item.toObject({ getters: true }))
+    });
+}
+
+module.exports = {
+    getUserByID,
+    createUser,
+    loginUser,
+    getCasesByUserId
+}

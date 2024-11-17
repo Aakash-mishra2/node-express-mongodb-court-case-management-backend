@@ -23,7 +23,7 @@ const citizenRoutes = require('./routes/citizen-routes');
 const adminRoutes = require('./routes/admin-routes');
 const otpRoutes = require('./routes/otp-routes.js');
 
-app.use('/ccms/public', citizenRoutes);
+app.use('/ccms/user', citizenRoutes);
 app.use('/ccms/admin', adminRoutes);
 app.use('/ccms/otp', otpRoutes);
 

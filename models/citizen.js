@@ -21,6 +21,11 @@ const publicSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    role: {
+        type: String,
+        required: true,
+        enum: ['user', 'admin'],
+    },
     idCardNo: {
         type: Number,
         minLength: 12,
@@ -28,7 +33,9 @@ const publicSchema = new mongoose.Schema({
     },
     cases: [{
         type: mongoose.Types.ObjectId,
-        required: true,
+        required: function () {
+            return this.role === 'user'
+        },
         ref: 'Case'
     }],
 });
