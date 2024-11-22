@@ -60,7 +60,7 @@ const createUser = async (req, res, next) => {
         const error = new HttpError('Signing up failed, please try again.', 500);
         return next(error);
     }
-    res.status(200).json({ added: { name: createdUser.name, id: createdUser._id.toString() } });
+    res.status(200).json({ added: { name: createdUser.name, id: createdUser._id.toString(), email: createdUser.email } });
 }
 
 const loginUser = async (req, res, next) => {
@@ -123,9 +123,24 @@ const getCasesByUserId = async (req, res, next) => {
     });
 }
 
+const resetPassword = async (req, res, next) => {
+    const { id } = req.params;
+    const { new_password } = req.body;
+    const user = await Citizen.findById(id);
+
+    if (!user) {
+        return next(new HttpError('User not found', 500));
+    }
+    user.password = new_password;
+
+    await user.save();
+    res.status(200).json({ message: "Password updated", user: user });
+}
+
 module.exports = {
     getUserByID,
     createUser,
     loginUser,
-    getCasesByUserId
+    getCasesByUserId,
+    resetPassword
 }

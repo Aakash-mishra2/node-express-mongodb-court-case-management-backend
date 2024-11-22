@@ -2,13 +2,12 @@ const HttpError = require('../models/http_error');
 const mongoose = require('mongoose');
 mongoose.set('strictQuery', true);
 const express = require('express');
-const otpGenerator = require('otp-generator');
-const twilio = require('twilio');
-const axios = require('axios');
+// const otpGenerator = require('otp-generator');
+// const twilio = require('twilio');
+
+// const otps = {};
 
 const app = express();
-const otps = {};
-
 app.use(express.json());
 
 const { validationResult } = require('express-validator');
@@ -23,7 +22,7 @@ const getAllCases = async (req, res, next) => {
         allCases = await Case.find(filter);
     }
     catch (err) {
-        console.log('FETCH ALL CASES ERROR: ', err, 'Please try again');
+        //console.log('FETCH ALL CASES ERROR: ', err, 'Please try again');
     }
     res.status(200).json({ message: "Founds matching cases after filtering", data: allCases });
 };
@@ -51,7 +50,7 @@ const createNewCase = async (req, res, next) => {
         summary: description,
         userAddress: { state, district },
         caseType: caseType,
-        status: "Filed",
+        status: "filed",
         documents: documents,
         plaintiff: userId,
     });
@@ -109,28 +108,32 @@ const updateHearing = async (req, res, next) => {
     res.status(200).json({ message: " Your case " + id + " is updated. ", yourCase });
 };
 
-const updateLawyer = async (req, res, next) => {
-    const { new_status, judgeName, judgeId, lawyerName, lawyerId } = req.body;
+const updatesAndVerification = async (req, res, next) => {
+    const { action, new_status = "", lawyerDocuments, lawyerName = "", enrollmentNumber = "" } = req.body;
+
     const { id } = req.params;
     let yourCase;
     try {
         yourCase = await Case.findById(id);
     } catch (err) {
-        const error = new HttpError('Something went wrong, could not find case. ', 500);
+        const error = new HttpError('Failed to update! Case not found.', 500);
         return next(error);
     }
-    yourCase.status = new_status,
-        yourCase.judge = {
-            judgeName,
-            judgeId,
-        };
+    if (action === "verify-documents") {
+        yourCase.status = new_status;
+    }
+    else if (action === 'update-lawyer')
+        yourCase.status = "pending";
     yourCase.lawyer = {
         lawyerName,
-        lawyerId,
+        enrollmentNumber,
+        relatedDocs: lawyerDocuments,
     };
+
     try {
         await yourCase.save();
     } catch (err) {
+        console.log(err);
         const error = new HttpError('Something went wrong, could not update Case. ', 500);
         return next(error);
     }
@@ -165,48 +168,48 @@ const withdrawCase = async (req, res, next) => {
     res.status(201).json({ message: "Deleted Case" })
 }
 
-const generateOtp = async (req, res, next) => {
-    const base_url = 'https://www.fast2sms.com/dev/bulkV2';
-    const { phoneNumber, userId } = req.body;
-    const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false });
-    try {
-        const response = await axios.post('https://www.fast2sms.com/dev/bulkV2', {
-            sender_id: 'TXTIND',
-            message: `Your OTP is ${otp}`,
-            route: 'v3',
-            numbers: phoneNumber,
-        }, {
-            headers: {
-                authorization: 'ZKk6e1u8y90t3LFAM7XvEbzQ2IpfRGHJsWc4rBDP5qVnxldTOiJtgp4hLquMrGS09aivCXfAYk8cDQ3V'
-            }
-        });
-    } catch (error) {
-        console.error('Error sending OTP:', error);
-    }
-};
+// const generateOtp = async (req, res, next) => {
+//     const base_url = 'https://www.fast2sms.com/dev/bulkV2';
+//     const { phoneNumber, userId } = req.body;
+//     const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false });
+//     try {
+//         const response = await axios.post('https://www.fast2sms.com/dev/bulkV2', {
+//             sender_id: 'TXTIND',
+//             message: `Your OTP is ${otp}`,
+//             route: 'v3',
+//             numbers: phoneNumber,
+//         }, {
+//             headers: {
+//                 authorization: 'ZKk6e1u8y90t3LFAM7XvEbzQ2IpfRGHJsWc4rBDP5qVnxldTOiJtgp4hLquMrGS09aivCXfAYk8cDQ3V'
+//             }
+//         });
+//     } catch (error) {
+//         console.error('Error sending OTP:', error);
+//     }
+// };
 
-const verifyOtp = async (req, res, next) => {
-    const { userId, otp } = req.body;
-    const storedOtpData = otps[userId];
+// const verifyOtp = async (req, res, next) => {
+//     const { email, otp } = req.body;
+//     const storedOtpData = otps[userId];
 
-    if (!storedOtpData) return res.status(400).json({ message: 'Invalid or expired OTP' });
+//     if (!storedOtpData) return res.status(400).json({ message: 'Invalid or expired OTP' });
 
-    const { otp: storedOtp, expiresAt } = storedOtpData;
-    if (storedOtp != otp || Date.now() > expiresAt) {
-        return res.status(400).json({ message: 'Invalid or expired OTP' });
-    }
+//     const { otp: storedOtp, expiresAt } = storedOtpData;
+//     if (storedOtp != otp || Date.now() > expiresAt) {
+//         return res.status(400).json({ message: 'Invalid or expired OTP' });
+//     }
 
-    //OTP is valid, delete it from storage
-    delete otps[userId];
-    res.status(200).json({ message: 'OTP verified successfully' });
-}
+//     //OTP is valid, delete it from storage
+//     delete otps[userId];
+//     res.status(200).json({ message: 'OTP verified successfully' });
+// }
 module.exports = {
     getAllCases,
     createNewCase,
     updateHearing,
-    updateLawyer,
+    updatesAndVerification,
     withdrawCase,
-    generateOtp,
-    verifyOtp,
+    // generateOtp,
+    // verifyOtp,
 };
 

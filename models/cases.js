@@ -12,16 +12,6 @@ const judgeSchema = new Schema({
     },
 });
 
-const lawyerSchema = new Schema({
-    lawyerName: {
-        type: String,
-        required: false,
-    },
-    lawyerId: {
-        type: String,
-        required: false,
-    },
-});
 const courtSchema = new Schema({
     courtName: {
         type: String,
@@ -66,7 +56,17 @@ const documentsSchema = new Schema({
         required: true
     }
 })
-
+const lawyerSchema = new Schema({
+    lawyerName: {
+        type: String,
+        required: false,
+    },
+    enrollmentNumber: {
+        type: String,
+        required: false,
+    },
+    relatedDocs: documentsSchema,
+});
 const addressSchema = new Schema({
     state: {
         type: String,
