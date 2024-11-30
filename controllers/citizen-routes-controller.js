@@ -134,7 +134,7 @@ const resetPassword = async (req, res, next) => {
     user.password = new_password;
 
     await user.save();
-    res.status(200).json({ message: "Password updated", user: user });
+    res.status(200).json({ message: "Password updated" });
 }
 
 module.exports = {

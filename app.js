@@ -7,17 +7,19 @@ const multer = require("multer");
 const { GridFsStorage } = require('multer-gridfs-storage');
 const Grid = require('gridfs-stream');
 const { GridFSBucket } = require('mongodb');
+const cors = require('cors');
 
 const PORT = process.env.PORT || 5000;
 const app = express();
 app.use(bodyParser.json());
+app.use(cors());
 
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-with, Content-Type, Accept, Authorization');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE');
-    next();
-});
+// app.use((req, res, next) => {
+//     res.setHeader('Access-Control-Allow-Origin', '*');
+//     res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-with, Content-Type, Accept, Authorization');
+//     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE');
+//     next();
+// });
 
 const citizenRoutes = require('./routes/citizen-routes');
 const adminRoutes = require('./routes/admin-routes');
@@ -95,9 +97,9 @@ app.get('/ccms/file/:id', async (req, res) => {
     let objectId;
     try {
         objectId = new mongoose.Types.ObjectId(fileId);
-    } catch (error) {
-        console.error('Invalid file ID format:', error);
-        return res.status(400).json({ error: 'Invalid file ID format' });
+    } catch (err) {
+        const error = new HttpError('Invalid file ID format:', error);
+        return next(error);
     }
 
     try {
@@ -129,9 +131,8 @@ app.get('/ccms/file/:id', async (req, res) => {
         });
 
         readStream.pipe(res);
-    } catch (error) {
-        console.error('Unexpected error fetching file:', error);
-        res.status(500).json({ error: 'Internal server error' });
+    } catch (err) {
+        return next(new HttpError('Internal Server Error.'));
     }
 });
 

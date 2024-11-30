@@ -22,7 +22,8 @@ const getAllCases = async (req, res, next) => {
         allCases = await Case.find(filter);
     }
     catch (err) {
-        //console.log('FETCH ALL CASES ERROR: ', err, 'Please try again');
+        console.log('FETCH ALL CASES ERROR: ', err, 'Please try again');
+        return next(new HttpError("Could not fetch cases, try again."))
     }
     res.status(200).json({ message: "Founds matching cases after filtering", data: allCases });
 };
@@ -31,7 +32,8 @@ const createNewCase = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         console.log(errors);
-        throw new HttpErrors('Invalid request body pased.', 400);
+        const error = HttpErrors('Invalid request body passed.', 400);
+        return next(error);
     }
     const { caseType, description, district, documents, registrationFees, state, userAadhar, userId } = req.body;
 
@@ -67,7 +69,7 @@ const createNewCase = async (req, res, next) => {
     }
     catch (err) {
         const error = new HttpError("New error found!", 500);
-        console.log(err);
+        return next(error);
     }
     //scope to add encryption and decryption using jwt
     res.status(200).json({ message: "New case added", caseObject: newCase });
@@ -75,37 +77,23 @@ const createNewCase = async (req, res, next) => {
 
 
 const updateHearing = async (req, res, next) => {
-    const { casetitle, new_status, next_hearing_date, next_hearing_timings, courtName, courtAddress } = req.body;
     const { id } = req.params;
     const updates = req.body;
-
-    const validUpdates = Object.fromEntries(
-        Object.entries(updates).filter(([_, value]) => value !== undefined)
-    );
-    let yourCase;
+    // Use $set to update only the fields
     try {
-        yourCase = await Case.findById(id);
-    } catch (err) {
-        const error = new HttpError('Something went wrong, could not find case. ', 500);
-        return next(error);
+        const updatedCase = await Case.findByIdAndUpdate(
+            id,
+            { $set: updates },
+            { new: true, runValidators: true }
+        );
+        if (!updatedCase) {
+            return res.status(404).json({ message: "Task not found." });
+        }
+        res.status(200).json({ message: 'Case Updated', caseObject: updatedCase });
     }
-    yourCase.caseTitle = casetitle;
-    yourCase.status = new_status;
-    yourCase.nextHearing = {
-        date: next_hearing_date,
-        timings: next_hearing_timings,
-    };
-    yourCase.court = {
-        courtName,
-        courtAddress,
-    };
-    try {
-        await yourCase.save();
-    } catch (err) {
-        const error = new HttpError('Something went wrong, could not update Case. ', 500);
-        return next(error);
+    catch (error) {
+        return next(new HttpError(error.message));
     }
-    res.status(200).json({ message: " Your case " + id + " is updated. ", yourCase });
 };
 
 const updatesAndVerification = async (req, res, next) => {
@@ -133,7 +121,6 @@ const updatesAndVerification = async (req, res, next) => {
     try {
         await yourCase.save();
     } catch (err) {
-        console.log(err);
         const error = new HttpError('Something went wrong, could not update Case. ', 500);
         return next(error);
     }
@@ -168,41 +155,6 @@ const withdrawCase = async (req, res, next) => {
     res.status(201).json({ message: "Deleted Case" })
 }
 
-// const generateOtp = async (req, res, next) => {
-//     const base_url = 'https://www.fast2sms.com/dev/bulkV2';
-//     const { phoneNumber, userId } = req.body;
-//     const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false });
-//     try {
-//         const response = await axios.post('https://www.fast2sms.com/dev/bulkV2', {
-//             sender_id: 'TXTIND',
-//             message: `Your OTP is ${otp}`,
-//             route: 'v3',
-//             numbers: phoneNumber,
-//         }, {
-//             headers: {
-//                 authorization: 'ZKk6e1u8y90t3LFAM7XvEbzQ2IpfRGHJsWc4rBDP5qVnxldTOiJtgp4hLquMrGS09aivCXfAYk8cDQ3V'
-//             }
-//         });
-//     } catch (error) {
-//         console.error('Error sending OTP:', error);
-//     }
-// };
-
-// const verifyOtp = async (req, res, next) => {
-//     const { email, otp } = req.body;
-//     const storedOtpData = otps[userId];
-
-//     if (!storedOtpData) return res.status(400).json({ message: 'Invalid or expired OTP' });
-
-//     const { otp: storedOtp, expiresAt } = storedOtpData;
-//     if (storedOtp != otp || Date.now() > expiresAt) {
-//         return res.status(400).json({ message: 'Invalid or expired OTP' });
-//     }
-
-//     //OTP is valid, delete it from storage
-//     delete otps[userId];
-//     res.status(200).json({ message: 'OTP verified successfully' });
-// }
 module.exports = {
     getAllCases,
     createNewCase,
