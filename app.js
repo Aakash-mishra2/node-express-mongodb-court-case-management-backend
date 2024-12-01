@@ -8,27 +8,50 @@ const { GridFsStorage } = require('multer-gridfs-storage');
 const Grid = require('gridfs-stream');
 const { GridFSBucket } = require('mongodb');
 const cors = require('cors');
+const http = require("http");
+const Chat = require('./models/chat');
 
-const PORT = process.env.PORT || 5000;
+
 const app = express();
+const PORT = process.env.PORT || 5000;
 app.use(bodyParser.json());
-app.use(cors());
 
-// app.use((req, res, next) => {
-//     res.setHeader('Access-Control-Allow-Origin', '*');
-//     res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-with, Content-Type, Accept, Authorization');
-//     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE');
-//     next();
-// });
+
+const server = http.createServer(app);
+app.use(cors({ origin: process.env.REACT_CLIENT_BASE_URL }));
+
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-with, Content-Type, Accept, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE');
+    next();
+});
+
+
+
+//io connection
+const io = require('socket.io')(server, {
+    cors: {
+        origin: "*",    //Allow requests from this origin
+        method: ["GET", "POST"], //Allow specific HTTP method
+        transports: ['websocket', 'polling'],
+        credentials: true
+    },
+    allowEIO3: true,
+});
+
+
 
 const citizenRoutes = require('./routes/citizen-routes');
 const adminRoutes = require('./routes/admin-routes');
 const otpRoutes = require('./routes/otp-routes.js');
+const chatController = require('./routes/chat-routes.js');
 
 app.use('/ccms/user', citizenRoutes);
 app.use('/ccms/admin', adminRoutes);
 app.use('/ccms/otp', otpRoutes);
 
+chatController(io);
 
 //applied on every request with error thrown by express.js
 app.use((error, req, res, next) => {
@@ -37,8 +60,8 @@ app.use((error, req, res, next) => {
     }
     res.status(error.errorCode || 500);
     res.json({ message: error.message || 'An unknown error occured. ' });
-
 });
+
 const db = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.kfazawl.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 let gfs, gfsBucket;
 
@@ -138,14 +161,18 @@ app.get('/ccms/file/:id', async (req, res) => {
 
 
 dbConnection.on('connected', () => {
-    app.listen(5000, function () {
+    server.listen(5000, function () {   //app listen method returns a server entity
         console.log('Server started on port 5000. ');
-    })
+    });
 });
+
+
+
 
 dbConnection.on('error', () => {
     console.log('Mongodb connection error');
 });
+
 app.use('/ccms', (req, res, next) => {
     res.json({
         welcome: 'Welcome to court case management system. Please follow README file for API Documentation and access all routes',
@@ -158,3 +185,4 @@ app.use((req, res, next) => {
     const error = new HttpError("We do not support this route yet.", 404);
     throw error;
 });
+
