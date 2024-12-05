@@ -2,6 +2,8 @@ const HttpError = require('../models/http_error');
 const { validationResult } = require('express-validator');
 const Citizen = require('../models/citizen');
 const Case = require('../models/cases');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 const getUserByID = async (req, res, next) => {
     const us_id = req.params.Uid;
@@ -60,7 +62,15 @@ const createUser = async (req, res, next) => {
         const error = new HttpError('Signing up failed, please try again.', 500);
         return next(error);
     }
-    res.status(200).json({ added: { name: createdUser.name, id: createdUser._id.toString(), email: createdUser.email } });
+    const userObject = {
+        name: createdUser.name,
+        id: createdUser._id.toString(),
+        email: createdUser.email,
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: "1h" });
+
+    res.status(200).json({ token, added: userObject });
 }
 
 const loginUser = async (req, res, next) => {
@@ -76,13 +86,17 @@ const loginUser = async (req, res, next) => {
         const error = new HttpError(' Invalid Credentials, could not log you in.', 401);
         return next(error);
     }
+
+    const token = jwt.sign({ id: existingUser._id }, process.env.JWT_SECRET_KEY, { expiresIn: "1h" });
     existingUser.password = 0;
     existingUser.idCardNo = 0;
     res.json({
         message: 'Logged In!. ',
+        token: token,
         citizen: existingUser.toObject({ getters: true })
     });
 }
+
 
 const getCasesByUserId = async (req, res, next) => {
     const { id } = req.params;
@@ -134,7 +148,7 @@ const resetPassword = async (req, res, next) => {
     user.password = new_password;
 
     await user.save();
-    res.status(200).json({ message: "Password updated" });
+    res.status(200).json({ message: "Password updated", user });
 }
 
 module.exports = {
