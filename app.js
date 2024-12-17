@@ -46,11 +46,12 @@ const citizenRoutes = require('./routes/citizen-routes');
 const adminRoutes = require('./routes/admin-routes');
 const otpRoutes = require('./routes/otp-routes.js');
 const chatController = require('./routes/chat-routes.js');
+const notificationsRoutes = require('./routes/notifications-routes.js');
 
 app.use('/ccms/user', citizenRoutes);
 app.use('/ccms/admin', adminRoutes);
 app.use('/ccms/otp', otpRoutes);
-
+app.use('/ccms/notifications', notificationsRoutes);
 chatController(io);
 
 //applied on every request with error thrown by express.js
