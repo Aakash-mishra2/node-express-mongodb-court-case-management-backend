@@ -13,6 +13,7 @@ app.use(express.json());
 const { validationResult } = require('express-validator');
 const Citizen = require('../models/citizen');
 const Case = require('../models/cases');
+const Notification = require('../models/notifications');
 
 const getAllCases = async (req, res, next) => {
     const { aId } = req.params;
@@ -40,6 +41,7 @@ const createNewCase = async (req, res, next) => {
     let user;
     try {
         user = await Citizen.findById(userId);
+
     } catch (err) {
         const error = new HttpError("Could not find user, please try again.", 500);
         return next(error);
@@ -58,12 +60,19 @@ const createNewCase = async (req, res, next) => {
     });
 
     let sess = null;
+    const notification = new Notification({
+        userId,
+        message: 'Your application is recieved. Kindly wait until verfications.'
+    })
+
+
     try {
         sess = await mongoose.startSession();
         sess.startTransaction();
         await newCase.save({});
         await user.cases.push(newCase);
         await user.save({});
+        await notification.save({});
         sess.commitTransaction();
         sess.endSession();
     }
@@ -86,9 +95,17 @@ const updateHearing = async (req, res, next) => {
             { $set: updates },
             { new: true, runValidators: true }
         );
+
+
         if (!updatedCase) {
-            return res.status(404).json({ message: "Task not found." });
+            return res.status(404).json({ message: "Case not found." });
         }
+        const notification = new Notification({
+            userId: updatedCase.plaintiff,
+            message: 'Case schedule is updated.'
+        });
+
+        notification.save();
         res.status(200).json({ message: 'Case Updated', caseObject: updatedCase });
     }
     catch (error) {
@@ -117,8 +134,13 @@ const updatesAndVerification = async (req, res, next) => {
         enrollmentNumber,
         relatedDocs: lawyerDocuments,
     };
+    const notification = new Notification({
+        userId: yourCase.plaintiff,
+        message: 'Your Case Lawyer is updated.'
+    });
 
     try {
+        await notification.save();
         await yourCase.save();
     } catch (err) {
         const error = new HttpError('Something went wrong, could not update Case. ', 500);
