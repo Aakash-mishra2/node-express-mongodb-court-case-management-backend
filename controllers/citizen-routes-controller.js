@@ -2,13 +2,10 @@ const HttpError = require('../models/http_error');
 const { validationResult } = require('express-validator');
 const Citizen = require('../models/citizen');
 const Case = require('../models/cases');
-<<<<<<< Updated upstream
-=======
 const Notification = require('../models/notifications');
 
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
->>>>>>> Stashed changes
 
 const getUserByID = async (req, res, next) => {
     const us_id = req.params.Uid;
@@ -140,10 +137,6 @@ const resetPassword = async (req, res, next) => {
     }
     user.password = new_password;
 
-<<<<<<< Updated upstream
-    await user.save();
-    res.status(200).json({ message: "Password updated" });
-=======
     try {
         const notification = new Notification({
             userId: id,
@@ -158,7 +151,6 @@ const resetPassword = async (req, res, next) => {
         res.status(500).json({ error: 'Error upating password.' });
     }
 
->>>>>>> Stashed changes
 }
 
 module.exports = {
