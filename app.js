@@ -139,15 +139,7 @@ app.get('/ccms/file/:id', async (req, res) => {
 });
 
 
-dbConnection.on('connected', () => {
-    app.listen(5000, function () {
-        console.log('Server started on port 5000. ');
-    })
-});
 
-dbConnection.on('error', () => {
-    console.log('Mongodb connection error');
-});
 app.use('/ccms', (req, res, next) => {
     res.json({
         welcome: 'Welcome to court case management system. Please follow README file for API Documentation and access all routes',
@@ -159,4 +151,14 @@ const HttpError = require('./models/http_error');
 app.use((req, res, next) => {
     const error = new HttpError("We do not support this route yet.", 404);
     throw error;
+});
+
+dbConnection.on('connected', () => {
+    app.listen(5000, function () {
+        console.log('Server started on port 5000. ');
+    })
+});
+
+dbConnection.on('error', () => {
+    console.log('Mongodb connection error');
 });
