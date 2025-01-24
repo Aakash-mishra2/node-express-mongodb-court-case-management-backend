@@ -23,7 +23,7 @@ const publicSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        required: true,
+        required: false,
         enum: ['user', 'admin'],
     },
     idCardNo: {

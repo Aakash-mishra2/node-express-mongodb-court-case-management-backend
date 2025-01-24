@@ -38,9 +38,9 @@ const createNewCase = async (req, res, next) => {
     }
     const { caseType, description, district, documents, registrationFees, state, userAadhar, userId } = req.body;
 
-    let user;
+    let existing;
     try {
-        user = await Citizen.findById(userId);
+        existing = await Citizen.findById(userId);
 
     } catch (err) {
         const error = new HttpError("Could not find user, please try again.", 500);
@@ -69,16 +69,29 @@ const createNewCase = async (req, res, next) => {
     try {
         sess = await mongoose.startSession();
         sess.startTransaction();
-        await newCase.save({});
-        await user.cases.push(newCase);
-        await user.save({});
-        await notification.save({});
-        sess.commitTransaction();
-        sess.endSession();
+        await newCase.save({ session: sess });
+        console.log('new case', newCase);
+
+        await existing.cases.push(newCase);
+        console.log('cases', existing.cases);
+
+        existing.save({ session: sess });
+        console.log('user', existing);
+
+        await notification.save({ session: sess });
+        console.log('notif', notification);
+
+        await sess.commitTransaction();
     }
     catch (err) {
+        if (sess) {
+            await sess.abortTransaction();
+        }
         const error = new HttpError("New error found!", 500);
         return next(error);
+    }
+    finally {
+        if (sess) sess.endSession();
     }
     //scope to add encryption and decryption using jwt
     res.status(200).json({ message: "New case added", caseObject: newCase });
@@ -186,4 +199,3 @@ module.exports = {
     // generateOtp,
     // verifyOtp,
 };
-
