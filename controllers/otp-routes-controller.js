@@ -2,23 +2,17 @@ const express = require('express');
 const nodemailer = require("nodemailer");
 const otpGenerator = require('otp-generator');
 const bodyParser = require('body-parser');
-const citizen = require('../models/citizen');
 const HttpError = require('../models/http_error');
-
 require("dotenv").config();
-
+const { Pool } = require('pg');
+const pool = new Pool({
+    connectionString: process.env.SUPABASE_DB_URL,
+    ssl: { rejectUnauthorized: false }
+});
 const app = express();
 app.use(express.json());
 app.use(bodyParser.json());
 
-const accountSid = process.env.ACCOUNT_SID;
-const authToken = process.env.AUTH_TOKEN;
-const messagingServiceId = process.env.MESSAGING_SERVICE_ID;
-const verifyServiceId = process.env.VERIFY_SERVICE_ID;
-//const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
-
-
-//const client = new Twilio(accountSid, authToken);
 
 //mock db to store otp
 const otpStore = new Map();
@@ -43,7 +37,18 @@ const generateOtp = async (req, res, next) => {
     }
 
     //verify password
-    const loggedInUser = await citizen.findOne({ email: email });
+    const client = await pool.connect();
+    let loggedInUser;
+    try {
+        const result = await client.query('SELECT * FROM citizens WHERE email = $1', [email]);
+        loggedInUser = result.rows[0];
+    } catch (err) {
+        console.error(err);
+        const error = new HttpError('Database query failed', 500);
+        client.release();
+        return next(error);
+    }
+    client.release();
 
     if (!loggedInUser || loggedInUser.password !== password) {
         const error = new HttpError("Could not find this User. Try again!")
@@ -107,50 +112,7 @@ const verifyOtp = async (req, res, next) => {
     res.status(200).json({ message: 'OTP verified succesfully' });
 };
 
-// const sendPhoneCode = async (req, res, next) => {
-//     const { phoneNumber } = req.body;
-//     if (!phoneNumber) {
-//         return next(new HttpError('Phone number is Required!', 500));
-//     }
-
-//     try {
-//         const verification = await client.verify.v2
-//             .services(verifyServiceId)
-//             .verifications.create({ to: phoneNumber, channel: 'sms' });
-
-//         res.status(200).json({ message: 'Verification code sent successfully!', verification });
-//     } catch (error) {
-//         res.status(500).json({ error: error.message });
-//     }
-// };
-
-// const getPhoneCode = async (req, res, next) => {
-//     const { phoneNumber, code } = req.body;
-
-//     if (!phoneNumber || !code) {
-//         //return res.status(400).json({ error: 'Phone number and code are required' });
-//         return next(HttpError("Phone number and code are required!"), 500);
-//     }
-
-//     try {
-//         const verificationCheck = await client.verify.v2
-//             .services(process.env.TWILIO_VERIFY_SERVICE_SID)
-//             .verificationChecks.create({ to: phoneNumber, code });
-
-//         if (verificationCheck.status === 'approved') {
-//             //res.status(200).json({ message: 'Phone number verified successfully!' });
-//             return next(HttpError("Phone number verified successfully!"), 500);
-//         } else {
-//             return next(HttpError("Invalid code. Verification failed.", 500))
-//         }
-//     }
-//     catch (error) {
-//         res.status(500).json({ error: error.message });
-//     }
-// };
-
-
-// exports.sendPhoneCode = sendPhoneCode;
-// exports.getPhoneCode = getPhoneCode;
-exports.generateOtp = generateOtp;
-exports.verifyOtp = verifyOtp;
+module.exports = {
+    generateOtp,
+    verifyOtp,
+};

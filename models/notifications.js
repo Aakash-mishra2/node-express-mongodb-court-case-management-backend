@@ -1,23 +1,5 @@
-const mongoose = require('mongoose');
+// Remove mongoose schema
+// Define Notification model as SQL table reference
+// All logic will be handled in controllers using SQL queries
 
-const notificationSchema = new mongoose.Schema({
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
-    },
-    message: {
-        type: String,
-        required: true,
-    },
-    read: {
-        type: Boolean,
-        default: false,
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
-});
-
-module.exports = mongoose.model('Notification', notificationSchema);
+module.exports = {};

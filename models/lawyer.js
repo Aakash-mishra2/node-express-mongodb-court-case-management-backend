@@ -1,37 +1,5 @@
-const mongoose = require('mongoose');
-const uniqueValidator = require('mongoose-unique-validator');
+// Remove mongoose and uniqueValidator
+// Define Lawyer model as SQL table reference
+// All logic will be handled in controllers using SQL queries
 
-const lawyerSchema = new mongoose.Schema({
-    id: {
-        type: Number,
-        minLength: 12,
-        unique: true,
-    },
-    fullName: {
-        type: String,
-        required: true,
-    },
-    enrollmentNumber: {
-        type: String,
-        required: true,
-    },
-    barCouncilAffiliation: {
-        type: String,
-        required: true,
-    },
-    practiceCertificate: {
-        type: String,
-        required: true,
-    },
-    officeAddress: {
-        type: String,
-        required: true,
-    },
-    cases: [{
-        type: mongoose.Types.ObjectId,
-        required: true,
-        ref: 'Case'
-    }]
-});
-
-module.exports = mongoose.model('Lawyer', lawyerSchema);
+module.exports = {};

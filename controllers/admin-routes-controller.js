@@ -1,115 +1,52 @@
+const supabase = require('../supabaseClient.js');
+
 const HttpError = require('../models/http_error');
-const mongoose = require('mongoose');
-mongoose.set('strictQuery', true);
 const express = require('express');
-// const otpGenerator = require('otp-generator');
-// const twilio = require('twilio');
-
-// const otps = {};
-
 const app = express();
 app.use(express.json());
-
 const { validationResult } = require('express-validator');
-const Citizen = require('../models/citizen');
-const Case = require('../models/cases');
-const Notification = require('../models/notifications');
 
 const getAllCases = async (req, res, next) => {
-    const { aId } = req.params;
-    const filter = req.query;
-    let allCases;
     try {
-        allCases = await Case.find(filter);
+        let query = supabase.from('cases').select('*');
+        // Example filter: ?status=filed
+        if (req.query.status) {
+            query = query.eq('status', req.query.status);
+        }
+        const { data, error } = await query;
+        if (error) return res.status(400).json({ error });
+        res.status(200).json({ message: "Found matching cases after filtering", data });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-    catch (err) {
-        console.log('FETCH ALL CASES ERROR: ', err, 'Please try again');
-        return next(new HttpError("Could not fetch cases, try again."))
-    }
-    res.status(200).json({ message: "Founds matching cases after filtering", data: allCases });
 };
 
 const createNewCase = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        console.log(errors);
-        const error = HttpErrors('Invalid request body passed.', 400);
-        return next(error);
+        return next(new HttpError('Invalid inputs', 422));
     }
     const { caseType, description, district, documents, registrationFees, state, userAadhar, userId } = req.body;
-
-    let user;
     try {
-        user = await Citizen.findById(userId);
-
+        const caseInsert = await pool.query(
+            'INSERT INTO cases (case_type, summary, user_address_state, user_address_district, registration_fees, plaintiff_id, status) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+            [caseType, description, state, district, registrationFees, userId, 'filed']
+        );
+        await pool.query('INSERT INTO notifications (user_id, message) VALUES ($1, $2)', [userId, 'Your application is received. Kindly wait until verifications.']);
+        res.status(200).json({ message: "New case added", caseObject: caseInsert.rows[0] });
     } catch (err) {
-        const error = new HttpError("Could not find user, please try again.", 500);
-        return next(error);
+        next(new HttpError('Error creating case', 500));
     }
+};
 
-    const newCase = new Case({
-        caseTitle: "New Application",
-        registration: registrationFees,
-        aadharNo: userAadhar,
-        summary: description,
-        userAddress: { state, district },
-        caseType: caseType,
-        status: "filed",
-        documents: documents,
-        plaintiff: userId,
-    });
-
-    let sess = null;
-    const notification = new Notification({
-        userId,
-        message: 'Your application is recieved. Kindly wait until verfications.'
-    })
-
-
-    try {
-        sess = await mongoose.startSession();
-        sess.startTransaction();
-        await newCase.save({});
-        await user.cases.push(newCase);
-        await user.save({});
-        await notification.save({});
-        sess.commitTransaction();
-        sess.endSession();
-    }
-    catch (err) {
-        const error = new HttpError("New error found!", 500);
-        return next(error);
-    }
-    //scope to add encryption and decryption using jwt
-    res.status(200).json({ message: "New case added", caseObject: newCase });
-}
-
-
-const updateHearing = async (req, res, next) => {
+const updateHearingSQL = async (req, res, next) => {
     const { id } = req.params;
     const updates = req.body;
-    // Use $set to update only the fields
     try {
-        const updatedCase = await Case.findByIdAndUpdate(
-            id,
-            { $set: updates },
-            { new: true, runValidators: true }
-        );
-
-
-        if (!updatedCase) {
-            return res.status(404).json({ message: "Case not found." });
-        }
-        const notification = new Notification({
-            userId: updatedCase.plaintiff,
-            message: 'Case schedule is updated.'
-        });
-
-        notification.save();
-        res.status(200).json({ message: 'Case Updated', caseObject: updatedCase });
-    }
-    catch (error) {
-        return next(new HttpError(error.message));
+        await pool.query('UPDATE cases SET next_hearing = $1 WHERE id = $2', [updates.nextHearing, id]);
+        res.status(200).json({ message: 'Hearing updated.' });
+    } catch (error) {
+        next(new HttpError('Error updating hearing', 500));
     }
 };
 
@@ -150,40 +87,20 @@ const updatesAndVerification = async (req, res, next) => {
 }
 
 const withdrawCase = async (req, res, next) => {
-    const deleteID = req.params.cID;
-    let deleteCase;
+    const { cID } = req.params;
     try {
-        deleteCase = await Case.findById(deleteID).populate('plaintiff');
+        await pool.query('DELETE FROM cases WHERE id = $1', [cID]);
+        res.status(200).json({ message: 'Case withdrawn.' });
     } catch (err) {
-        const error = new HttpError(' Could not find your place. Please retry. ');
-        return next(error);
+        next(new HttpError('Error withdrawing case', 500));
     }
-    if (!deleteCase) {
-        const error = new HttpError('could not find a case by this ID', 404);
-        return next(error);
-    }
-    try {
-        const sess2 = await mongoose.startSession();
-        sess2.startTransaction();
-        deleteCase.plaintiff.cases.pull(deleteCase);
-        await deleteCase.plaintiff.save({ session: sess2 });
-        await Case.deleteOne({ id: deleteID });
-        await sess2.commitTransaction();
-        sess2.endSession();
-    } catch (err) {
-        const error = new HttpError(' Something went wrong, could not delete place. ', 500);
-        return next(error);
-    }
-    res.status(201).json({ message: "Deleted Case" })
-}
+};
 
 module.exports = {
     getAllCases,
     createNewCase,
-    updateHearing,
+    updateHearing: updateHearingSQL,
     updatesAndVerification,
     withdrawCase,
-    // generateOtp,
-    // verifyOtp,
 };
 

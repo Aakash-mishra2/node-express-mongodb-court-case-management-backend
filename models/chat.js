@@ -1,22 +1,5 @@
-mongoose = require('mongoose');
+// Remove mongoose schema
+// Define Chat model as SQL table reference
+// All logic will be handled in controllers using SQL queries
 
-const Schema = mongoose.Schema;
-
-const ChatSchema = new Schema(
-  {
-    message: {
-      type: String,
-    },
-    sender: {
-      type: Schema.Types.ObjectId,
-      ref: 'user',
-    },
-    type: {
-      type: String,
-    },
-  },
-  { timestamps: true }
-);
-
-const Chat = mongoose.model('chat', ChatSchema);
-module.exports = Chat;
+module.exports = {};

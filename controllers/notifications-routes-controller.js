@@ -1,26 +1,26 @@
-const Notification = require("../models/notifications");
+const { Pool } = require('pg');
+const pool = new Pool({
+    connectionString: process.env.SUPABASE_DB_URL,
+    ssl: { rejectUnauthorized: false }
+});
+const Notification = {};
 const HttpError = require('../models/http_error');
 
 const getAll = async (req, res, next) => {
     const { userId } = req.params;
-
     try {
-        const notifications = await Notification.find({ userId }).sort({ createdAt: -1 });
-        res.status(200).json(notifications);
+        const result = await pool.query('SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC', [userId]);
+        res.status(200).json(result.rows);
     } catch (error) {
         res.status(500).json({ error: 'Error fetching notifications.' });
     }
-}
+};
 
 const createNotif = async (req, res, next) => {
+    const { userId, message } = req.body;
     try {
-        const notification = new Notification({
-            userId,
-            message,
-        });
-
-        await notification.save();
-        res.status(201).json({ message: 'Notification created.', notification });
+        const result = await pool.query('INSERT INTO notifications (user_id, message) VALUES ($1, $2) RETURNING *', [userId, message]);
+        res.status(201).json({ message: 'Notification created.', notification: result.rows[0] });
     } catch (error) {
         res.status(500).json({ error: 'Error creating notification.' });
     }
@@ -29,5 +29,4 @@ const createNotif = async (req, res, next) => {
 module.exports = {
     getAll,
     createNotif,
-
 };
