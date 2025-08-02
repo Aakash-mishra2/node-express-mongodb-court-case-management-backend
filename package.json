@@ -29,6 +29,7 @@
     "otp-generator": "^4.0.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "nodemon": "^2.0.22",
+    "pg": "^8.16.3"
   }
 }

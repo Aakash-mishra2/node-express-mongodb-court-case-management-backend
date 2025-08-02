@@ -1,157 +1,116 @@
-const HttpError = require('../models/http_error');
-const { validationResult } = require('express-validator');
 const Citizen = require('../models/citizen');
-const Case = require('../models/cases');
+const Case = require('../models/case');
 const Notification = require('../models/notifications');
-
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
+const HttpError = require('../models/http_error');
 
 const getUserByID = async (req, res, next) => {
-    const us_id = req.params.Uid;
-    let identifiedUser;
-    try {
-        identifiedUser = await Citizen.findById(us_id, "-idCardNo -password");
-    }
-    catch (err) {
-        const error = new HttpError('Could not get this Citizen', 400);
-        return next(error);
-    }
-    if (!identifiedUser) {
-        const error = new HttpError('No user found for this provided ID. ');
-        return next(error);
-    }
-    res.status(200).json({ foundUser: identifiedUser.toObject({ getters: true }) });
+    const { id } = req.params;
 
-}
+    try {
+        const citizen = await Citizen.findById(id);
+        if (!citizen) {
+            return next(new HttpError('User not found', 404));
+        }
+        res.json({ user: citizen });
+    } catch (err) {
+        return next(new HttpError('Something went wrong, could not find user.', 500));
+    }
+};
+
 const createUser = async (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        const error = new HttpError("Invalid request sent. Please send correct input. ");
-        return next(error);
-    }
+    const { fullName, email, password, phone, addressState, addressDistrict } = req.body;
 
-    const { email, password, name, idCardNo, role = 'user' } = req.body;
-    let existingUser;
     try {
-        existingUser = await Citizen.findOne({ idCardNo: idCardNo }, { password: 0, idCardNo: 0 });
+        const existingUser = await Citizen.findByEmail(email);
+        if (existingUser) {
+            return next(new HttpError('User already exists with this email', 422));
+        }
+
+        const newCitizen = await Citizen.create({
+            fullName,
+            email,
+            password,
+            phone,
+            addressState,
+            addressDistrict
+        });
+
+        res.status(201).json({ user: newCitizen });
     } catch (err) {
-        const error = new HttpError(
-            'Signing up failed please try again later. ', 500
-        );
-        return next(error);
+        return next(new HttpError('Creating user failed, please try again.', 500));
     }
-
-    if (existingUser) {
-        const error = new HttpError(`Failed, ${role} exists already, Try login.`, 401);
-        return next(error);
-    }
-
-    const newUser = new Citizen({
-        name,
-        email,
-        password,
-        image: 'https://static.vecteezy.com/system/resources/previews/022/159/714/original/icon-concept-of-avatar-user-account-for-social-media-with-circle-line-can-be-used-for-technology-business-and-platforms-can-be-applied-to-web-website-poster-mobile-apps-ads-free-vector.jpg',
-        idCardNo,
-        role,
-        ...(role === 'user' && { cases: [] })
-    });
-
-    let createdUser = null;
-    try {
-        createdUser = await newUser.save();
-    } catch (err) {
-        const error = new HttpError('Signing up failed, please try again.', 500);
-        return next(error);
-    }
-    res.status(200).json({ added: { name: createdUser.name, id: createdUser._id.toString(), email: createdUser.email } });
-}
+};
 
 const loginUser = async (req, res, next) => {
     const { email, password } = req.body;
-    let existingUser;
+
     try {
-        existingUser = await Citizen.findOne({ email: email });
+        const citizen = await Citizen.findByEmail(email);
+        if (!citizen || citizen.password !== password) {
+            return next(new HttpError('Invalid credentials', 401));
+        }
+
+        res.json({ user: citizen, message: 'Login successful' });
     } catch (err) {
-        const error = new HttpError('Login failed, please try again later', 500);
-        return next(error);
+        return next(new HttpError('Login failed, please try again.', 500));
     }
-    if (!existingUser || existingUser.password != password) {
-        const error = new HttpError(' Invalid Credentials, could not log you in.', 401);
-        return next(error);
-    }
-    existingUser.password = 0;
-    existingUser.idCardNo = 0;
-    res.json({
-        message: 'Logged In!. ',
-        citizen: existingUser.toObject({ getters: true })
-    });
-}
+};
 
 const getCasesByUserId = async (req, res, next) => {
     const { id } = req.params;
     const { filter } = req.body;
-    let thisUserCases, closedCases;
-    const populateOptions = { path: 'cases' };
-    if (filter && filter.status) populateOptions.match = { status: filter.status };
-    try {
-        thisUserCases = await Citizen.findById(id).populate(populateOptions);
-    }
-    catch (err) {
-        const error = new HttpError('Something went wrong, could not find a case.', 500);
-        return next(error);
-    }
-    const totalCasesLength = thisUserCases.cases.length;
-    try {
-        closedCases = await Citizen.findById(id).populate({
-            path: 'cases',
-            match: { status: 'closed' }
-        });
-    }
 
-    catch (err) {
-        const error = new HttpError('Closed cases not found!', 500);
-        return next(error);
+    try {
+        const citizen = await Citizen.findById(id);
+        if (!citizen) {
+            return next(new HttpError('User not found', 404));
+        }
+
+        const allCases = await Case.findByUserId(id);
+        const closedCases = await Case.findByUserId(id, 'closed');
+
+        const totalCasesLength = allCases.length;
+        const closedCasesLength = closedCases.length;
+        const activeCasesLength = totalCasesLength - closedCasesLength;
+
+        let filteredCases = allCases;
+        if (filter && filter.status) {
+            filteredCases = await Case.findByUserId(id, filter.status);
+        }
+
+        res.json({
+            activeCases: activeCasesLength,
+            closedCases: closedCasesLength,
+            totalCases: totalCasesLength,
+            allCases: filteredCases
+        });
+    } catch (err) {
+        return next(new HttpError('Something went wrong, could not find cases.', 500));
     }
-    const closedCasesLength = closedCases.cases.length;
-    const activeCasesLength = totalCasesLength - closedCasesLength;
-    if (!thisUserCases || thisUserCases.length === 0) {
-        const error = new HttpError('Could not find existing cases for the provided user ID.', 404);
-        return next(error);
-    }
-    res.json({
-        activeCases: activeCasesLength,
-        closedCases: closedCasesLength,
-        totalCases: totalCasesLength,
-        allCases: thisUserCases.cases.map(item => item.toObject({ getters: true }))
-    });
-}
+};
 
 const resetPassword = async (req, res, next) => {
     const { id } = req.params;
     const { new_password } = req.body;
-    const user = await Citizen.findById(id);
-
-    if (!user) {
-        return next(new HttpError('User not found', 500));
-    }
-    user.password = new_password;
 
     try {
-        const notification = new Notification({
+        const citizen = await Citizen.findById(id);
+        if (!citizen) {
+            return next(new HttpError('User not found', 404));
+        }
+
+        await citizen.updatePassword(new_password);
+
+        const notification = await Notification.create({
             userId: id,
-            message: "Password updated Succesfully.",
+            message: "Password updated successfully."
         });
 
-        await notification.save();
-        await user.save();
-        res.status(200).json({ message: "Password updated", user });
+        res.status(200).json({ message: "Password updated", user: citizen });
+    } catch (error) {
+        return next(new HttpError('Error updating password.', 500));
     }
-    catch (error) {
-        res.status(500).json({ error: 'Error upating password.' });
-    }
-
-}
+};
 
 module.exports = {
     getUserByID,
@@ -159,4 +118,4 @@ module.exports = {
     loginUser,
     getCasesByUserId,
     resetPassword
-}
+};
