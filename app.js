@@ -100,8 +100,8 @@ app.use("/", (req, res, next) => {
 
 const HttpError = require("./models/http_error");
 app.use((req, res, next) => {
-    const error = new HttpError("We do not support this route yet.", 404);
-    throw error;
+    // Redirect any unmatched routes to the root path
+    res.redirect('/');
 });
 
 app.listen(PORT, "0.0.0.0", () => {
