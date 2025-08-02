@@ -2,6 +2,17 @@
 const { query } = require('../config/database');
 
 class Case {
+    static async deleteById(id) {
+        // Delete related hearings
+        await query('DELETE FROM hearings WHERE case_id = $1', [id]);
+        // Delete related documents
+        await query('DELETE FROM documents WHERE case_id = $1', [id]);
+        // Optionally delete related notifications (if any)
+        await query('DELETE FROM notifications WHERE user_id = (SELECT plaintiff_id FROM cases WHERE id = $1)', [id]);
+        // Delete the case itself
+        await query('DELETE FROM cases WHERE id = $1', [id]);
+        return true;
+    }
     constructor(data) {
         this.id = data.id;
         this.caseTitle = data.case_title;

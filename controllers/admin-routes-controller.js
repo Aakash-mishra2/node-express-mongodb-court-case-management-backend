@@ -1,10 +1,6 @@
 const HttpError = require('../models/http_error');
 // ...existing code...
 const express = require('express');
-// const otpGenerator = require('otp-generator');
-// const twilio = require('twilio');
-
-// const otps = {};
 
 const app = express();
 app.use(express.json());
@@ -144,30 +140,22 @@ const updatesAndVerification = async (req, res, next) => {
 
 const withdrawCase = async (req, res, next) => {
     const deleteID = req.params.cID;
-    let deleteCase;
     try {
-        deleteCase = await Case.findById(deleteID).populate('plaintiff');
+        // Find the case
+        const deleteCase = await Case.findById(deleteID);
+        if (!deleteCase) {
+            const error = new HttpError('could not find a case by this ID', 404);
+            return next(error);
+        }
+        // Remove the case from plaintiff's cases (if you have a join table or array)
+        // Example: await Citizen.removeCase(deleteCase.plaintiffId, deleteID);
+        // Delete the case from the database
+        await Case.deleteById(deleteID);
+        res.status(201).json({ message: "Deleted Case" });
     } catch (err) {
-        const error = new HttpError(' Could not find your place. Please retry. ');
+        const error = new HttpError(' Something went wrong, could not delete case. ', 500);
         return next(error);
     }
-    if (!deleteCase) {
-        const error = new HttpError('could not find a case by this ID', 404);
-        return next(error);
-    }
-    try {
-        const sess2 = await mongoose.startSession();
-        sess2.startTransaction();
-        deleteCase.plaintiff.cases.pull(deleteCase);
-        await deleteCase.plaintiff.save({ session: sess2 });
-        await Case.deleteOne({ id: deleteID });
-        await sess2.commitTransaction();
-        sess2.endSession();
-    } catch (err) {
-        const error = new HttpError(' Something went wrong, could not delete place. ', 500);
-        return next(error);
-    }
-    res.status(201).json({ message: "Deleted Case" })
 }
 
 module.exports = {

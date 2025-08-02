@@ -170,4 +170,4 @@ echo ""
 echo ""
 echo "=== API Testing Complete ==="
 
-} >script-output.txt 2>&1
+} > scripts/script-output.txt 2>&1

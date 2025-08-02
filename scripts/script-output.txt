@@ -1,0 +1,137 @@
+=== Testing Court Case Management System API ===
+Starting server test...
+
+1. Testing Root Endpoint
+========================
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   227  100   227    0     0  31668      0 --:--:-- --:--:-- --:--:-- 32428
+curl: (23) Failed writing body
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   227  100   227    0     0  57265      0 --:--:-- --:--:-- --:--:-- 75666{"welcome":"Welcome to court case management system. Please follow README file for API Documentation and access all routes","ReadMe":"https://github.com/Aakash-mishra2/node-express-mongodb-court-case-management-backend#readme"}
+
+
+2. Testing User Signup
+======================
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   197    0     0  100   197      0    162  0:00:01  0:00:01 --:--:--   162100   246  100    49  100   197     23     95  0:00:02  0:00:02 --:--:--   119100   246  100    49  100   197     23     95  0:00:02  0:00:02 --:--:--   119
+curl: (23) Failed writing body
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   246  100    49  100   197    209    843 --:--:-- --:--:-- --:--:--  1055{"message":"User already exists with this email"}
+
+
+3. Testing User Login
+====================
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    72    0     0  100    72      0    344 --:--:-- --:--:-- --:--:--   344100   105  100    33  100    72    128    281 --:--:-- --:--:-- --:--:--   408
+curl: (23) Failed writing body
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   105  100    33  100    72    137    300 --:--:-- --:--:-- --:--:--   439{"message":"Invalid credentials"}
+
+
+4. Testing Get User Cases (using dummy user ID: 1)
+==================================================
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   516  100   516    0     0    677      0 --:--:-- --:--:-- --:--:--   677100   516  100   516    0     0    677      0 --:--:-- --:--:-- --:--:--   677
+curl: (23) Failed writing body
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   516  100   516    0     0    707      0 --:--:-- --:--:-- --:--:--   708{"activeCases":1,"closedCases":0,"totalCases":1,"allCases":[{"id":1,"case_title":"Property Dispute Case","case_type":"Civil","summary":"Dispute over property ownership between two parties regarding ancestral land in Delhi","registration_fees":"5000.00","status":"pending","plaintiff_id":1,"lawyer_id":1,"judge_id":1,"court_id":1,"created_at":"2025-08-02T01:24:23.689Z","updated_at":"2025-08-02T01:24:23.689Z","lawyer_name":"Advocate Priya Sharma","judge_name":"Justice A.K. Sharma","court_name":"Delhi High Court"}]}
+
+
+5. Testing Get All Cases (Admin)
+================================
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100  2460  100  2460    0     0   9627      0 --:--:-- --:--:-- --:--:--  9647
+curl: (23) Failed writing body
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100  2460  100  2460    0     0  10517      0 --:--:-- --:--:-- --:--:-- 10557{"message":"Found matching cases after filtering","data":[{"id":1,"case_title":"Property Dispute Case","case_type":"Civil","summary":"Dispute over property ownership between two parties regarding ancestral land in Delhi","registration_fees":"5000.00","status":"pending","plaintiff_id":1,"lawyer_id":1,"judge_id":1,"court_id":1,"created_at":"2025-08-02T01:24:23.689Z","updated_at":"2025-08-02T01:24:23.689Z","lawyer_name":"Advocate Priya Sharma","judge_name":"Justice A.K. Sharma","court_name":"Delhi High Court","plaintiff_name":"John Doe"},{"id":2,"case_title":"Motor Vehicle Accident Claim","case_type":"Motor Accident","summary":"Compensation claim for injuries sustained in road accident on Mumbai highway","registration_fees":"3000.00","status":"in_progress","plaintiff_id":2,"lawyer_id":2,"judge_id":2,"court_id":2,"created_at":"2025-08-02T01:24:23.689Z","updated_at":"2025-08-02T01:24:23.689Z","lawyer_name":"Advocate Rajesh Kumar","judge_name":"Justice B.K. Singh","court_name":"Mumbai High Court","plaintiff_name":"Jane Smith"},{"id":3,"case_title":"Employment Termination Case","case_type":"Labor","summary":"Wrongful termination case filed by employee against IT company in Kolkata","registration_fees":"4000.00","status":"pending","plaintiff_id":3,"lawyer_id":3,"judge_id":3,"court_id":3,"created_at":"2025-08-02T01:24:23.689Z","updated_at":"2025-08-02T01:24:23.689Z","lawyer_name":"Advocate Sunita Verma","judge_name":"Justice C.K. Verma","court_name":"Kolkata High Court","plaintiff_name":"Robert Johnson"},{"id":4,"case_title":"Consumer Protection Case","case_type":"Consumer","summary":"Defective product complaint against electronics manufacturer","registration_fees":"2500.00","status":"filed","plaintiff_id":4,"lawyer_id":4,"judge_id":1,"court_id":1,"created_at":"2025-08-02T01:24:23.689Z","updated_at":"2025-08-02T01:24:23.689Z","lawyer_name":"Advocate Vikram Singh","judge_name":"Justice A.K. Sharma","court_name":"Delhi High Court","plaintiff_name":"Mary Williams"},{"id":5,"case_title":"Matrimonial Dispute","case_type":"Family","summary":"Divorce proceedings with child custody and property settlement issues","registration_fees":"6000.00","status":"in_progress","plaintiff_id":5,"lawyer_id":5,"judge_id":2,"court_id":2,"created_at":"2025-08-02T01:24:23.689Z","updated_at":"2025-08-02T01:24:23.689Z","lawyer_name":"Advocate Neha Gupta","judge_name":"Justice B.K. Singh","court_name":"Mumbai High Court","plaintiff_name":"David Brown"}]}
+
+
+6. Testing Create New Case
+==========================
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   275  100    30  100   245     63    518 --:--:-- --:--:-- --:--:--   581100   275  100    30  100   245     63    518 --:--:-- --:--:-- --:--:--   581
+curl: (23) Failed writing body
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0
+curl: (7) Failed to connect to localhost port 5000 after 2254 ms: Couldn't connect to server
+
+
+7. Testing Get Notifications
+============================
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0
+curl: (7) Failed to connect to localhost port 5000 after 2222 ms: Couldn't connect to server
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0
+curl: (7) Failed to connect to localhost port 5000 after 2230 ms: Couldn't connect to server
+
+
+8. Testing Create Notification
+==============================
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0
+curl: (7) Failed to connect to localhost port 5000 after 2262 ms: Couldn't connect to server
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0
+curl: (7) Failed to connect to localhost port 5000 after 2248 ms: Couldn't connect to server
+
+
+9. Testing Generate OTP
+=======================
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0
+curl: (7) Failed to connect to localhost port 5000 after 2252 ms: Couldn't connect to server
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0
+curl: (7) Failed to connect to localhost port 5000 after 2255 ms: Couldn't connect to server
+
+
+10. Testing Update Case Status
+==============================
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0
+curl: (7) Failed to connect to localhost port 5000 after 2239 ms: Couldn't connect to server
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0
+curl: (7) Failed to connect to localhost port 5000 after 2255 ms: Couldn't connect to server
+
+
+11. Testing File Upload (requires actual PDF file)
+==================================================
+Note: This test requires a PDF file. Creating a dummy text file for demo...
+File upload test skipped (requires PDF file)
+
+
+12. Testing Invalid Route (should redirect to /)
+================================================
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0
+curl: (7) Failed to connect to localhost port 5000 after 2239 ms: Couldn't connect to server
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0
+curl: (7) Failed to connect to localhost port 5000 after 2252 ms: Couldn't connect to server
+
+
+=== API Testing Complete ===
