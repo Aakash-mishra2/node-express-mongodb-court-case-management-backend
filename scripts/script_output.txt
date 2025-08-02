@@ -1,0 +1,54 @@
+=== Testing Court Case Management System API ===
+Starting server test...
+
+1. Testing Root Endpoint
+========================
+
+
+2. Testing User Signup
+======================
+
+
+3. Testing User Login
+====================
+
+
+4. Testing Get User Cases (using dummy user ID: 1)
+==================================================
+
+
+5. Testing Get All Cases (Admin)
+================================
+
+
+6. Testing Create New Case
+==========================
+
+
+7. Testing Get Notifications
+============================
+
+
+8. Testing Create Notification
+==============================
+
+
+9. Testing Generate OTP
+=======================
+
+
+10. Testing Update Case Status
+==============================
+
+
+11. Testing File Upload (requires actual PDF file)
+==================================================
+Note: This test requires a PDF file. Creating a dummy text file for demo...
+File upload test skipped (requires PDF file)
+
+
+12. Testing Invalid Route (should redirect to /)
+================================================
+
+
+=== API Testing Complete ===

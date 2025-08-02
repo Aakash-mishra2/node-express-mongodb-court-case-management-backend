@@ -1,6 +1,7 @@
-
 #!/bin/bash
 
+# Redirect all output (stdout and stderr) to script-output.txt
+{
 echo "=== Testing Court Case Management System API ==="
 echo "Starting server test..."
 
@@ -168,3 +169,5 @@ curl -X GET "$BASE_URL/invalid-route" | jq '.' 2>/dev/null || curl -X GET "$BASE
 echo ""
 echo ""
 echo "=== API Testing Complete ==="
+
+} >script-output.txt 2>&1

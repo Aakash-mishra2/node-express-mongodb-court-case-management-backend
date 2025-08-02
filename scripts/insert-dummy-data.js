@@ -1,9 +1,8 @@
-
-const { pool } = require('../config/database');
+const { pool } = require("../config/database");
 
 async function insertDummyData() {
     try {
-        console.log('Inserting dummy data...');
+        console.log("Inserting dummy data...");
 
         // Insert dummy citizens
         const citizensResult = await pool.query(`
@@ -16,7 +15,7 @@ async function insertDummyData() {
             ON CONFLICT (email) DO NOTHING
             RETURNING id, full_name;
         `);
-        console.log('Inserted citizens:', citizensResult.rows);
+        console.log("Inserted citizens:", citizensResult.rows);
 
         // Insert dummy lawyers
         const lawyersResult = await pool.query(`
@@ -29,7 +28,7 @@ async function insertDummyData() {
             ON CONFLICT (enrollment_number) DO NOTHING
             RETURNING id, full_name;
         `);
-        console.log('Inserted lawyers:', lawyersResult.rows);
+        console.log("Inserted lawyers:", lawyersResult.rows);
 
         // Insert dummy cases
         const casesResult = await pool.query(`
@@ -41,7 +40,7 @@ async function insertDummyData() {
             ('Matrimonial Dispute', 'Family', 'Divorce proceedings with child custody and property settlement issues', 6000.00, 'in_progress', 5, 5, 2, 2)
             RETURNING id, case_title;
         `);
-        console.log('Inserted cases:', casesResult.rows);
+        console.log("Inserted cases:", casesResult.rows);
 
         // Insert dummy hearings
         await pool.query(`
@@ -53,7 +52,7 @@ async function insertDummyData() {
             (4, '2024-03-01', '09:30:00'),
             (5, '2024-03-05', '15:00:00');
         `);
-        console.log('Inserted hearings');
+        console.log("Inserted hearings");
 
         // Insert dummy documents
         await pool.query(`
@@ -67,7 +66,7 @@ async function insertDummyData() {
             (4, 4, 'Purchase Receipt', 'receipt_004.pdf', 'DOC007'),
             (5, 5, 'Marriage Certificate', 'marriage_cert_005.pdf', 'DOC008');
         `);
-        console.log('Inserted documents');
+        console.log("Inserted documents");
 
         // Insert dummy notifications
         await pool.query(`
@@ -79,7 +78,7 @@ async function insertDummyData() {
             (4, 'Your consumer complaint has been filed successfully', true),
             (5, 'Next hearing scheduled for your matrimonial case', false);
         `);
-        console.log('Inserted notifications');
+        console.log("Inserted notifications");
 
         // Insert dummy chat messages
         await pool.query(`
@@ -90,7 +89,7 @@ async function insertDummyData() {
             ('Can you provide status update on my case?', 4, 'user_message'),
             ('I need to discuss settlement options', 5, 'user_message');
         `);
-        console.log('Inserted chat messages');
+        console.log("Inserted chat messages");
 
         // Display summary
         const summary = await pool.query(`
@@ -106,22 +105,21 @@ async function insertDummyData() {
                 (SELECT COUNT(*) FROM chats) as total_chats;
         `);
 
-        console.log('\n=== Database Summary ===');
-        console.log('Citizens:', summary.rows[0].total_citizens);
-        console.log('Lawyers:', summary.rows[0].total_lawyers);
-        console.log('Courts:', summary.rows[0].total_courts);
-        console.log('Judges:', summary.rows[0].total_judges);
-        console.log('Cases:', summary.rows[0].total_cases);
-        console.log('Hearings:', summary.rows[0].total_hearings);
-        console.log('Documents:', summary.rows[0].total_documents);
-        console.log('Notifications:', summary.rows[0].total_notifications);
-        console.log('Chat Messages:', summary.rows[0].total_chats);
-        console.log('========================\n');
+        console.log("\n=== Database Summary ===");
+        console.log("Citizens:", summary.rows[0].total_citizens);
+        console.log("Lawyers:", summary.rows[0].total_lawyers);
+        console.log("Courts:", summary.rows[0].total_courts);
+        console.log("Judges:", summary.rows[0].total_judges);
+        console.log("Cases:", summary.rows[0].total_cases);
+        console.log("Hearings:", summary.rows[0].total_hearings);
+        console.log("Documents:", summary.rows[0].total_documents);
+        console.log("Notifications:", summary.rows[0].total_notifications);
+        console.log("Chat Messages:", summary.rows[0].total_chats);
+        console.log("========================\n");
 
-        console.log('Dummy data insertion completed successfully!');
-        
+        console.log("Dummy data insertion completed successfully!");
     } catch (error) {
-        console.error('Error inserting dummy data:', error);
+        console.error("Error inserting dummy data:", error);
         process.exit(1);
     } finally {
         await pool.end();
@@ -129,4 +127,4 @@ async function insertDummyData() {
     }
 }
 
-insertDummyData();
+//insertDummyData();
