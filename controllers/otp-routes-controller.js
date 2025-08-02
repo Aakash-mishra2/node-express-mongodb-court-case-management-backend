@@ -43,7 +43,7 @@ const generateOtp = async (req, res, next) => {
     }
 
     //verify password
-    const loggedInUser = await citizen.findOne({ email: email });
+    const loggedInUser = await Citizen.findByEmail(email);
 
     if (!loggedInUser || loggedInUser.password !== password) {
         const error = new HttpError("Could not find this User. Try again!")

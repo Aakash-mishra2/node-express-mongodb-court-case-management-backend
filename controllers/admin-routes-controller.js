@@ -1,6 +1,5 @@
 const HttpError = require('../models/http_error');
-const mongoose = require('mongoose');
-mongoose.set('strictQuery', true);
+// ...existing code...
 const express = require('express');
 // const otpGenerator = require('otp-generator');
 // const twilio = require('twilio');
@@ -12,7 +11,7 @@ app.use(express.json());
 
 const { validationResult } = require('express-validator');
 const Citizen = require('../models/citizen');
-const Case = require('../models/cases');
+const Case = require('../models/case');
 const Notification = require('../models/notifications');
 
 const getAllCases = async (req, res, next) => {
@@ -20,13 +19,13 @@ const getAllCases = async (req, res, next) => {
     const filter = req.query;
     let allCases;
     try {
-        allCases = await Case.find(filter);
+        allCases = await Case.findAll();
     }
     catch (err) {
         console.log('FETCH ALL CASES ERROR: ', err, 'Please try again');
         return next(new HttpError("Could not fetch cases, try again."))
     }
-    res.status(200).json({ message: "Founds matching cases after filtering", data: allCases });
+    res.status(200).json({ message: "Found matching cases after filtering", data: allCases });
 };
 
 const createNewCase = async (req, res, next) => {
@@ -41,52 +40,33 @@ const createNewCase = async (req, res, next) => {
     let existing;
     try {
         existing = await Citizen.findById(userId);
-
     } catch (err) {
         const error = new HttpError("Could not find user, please try again.", 500);
         return next(error);
     }
 
-    const newCase = new Case({
-        caseTitle: "New Application",
-        registration: registrationFees,
-        aadharNo: userAadhar,
-        summary: description,
-        userAddress: { state, district },
-        caseType: caseType,
-        status: "filed",
-        documents: documents,
-        plaintiff: userId,
-    });
-
-    let sess = null;
-    const notification = new Notification({
-        userId,
-        message: 'Your application is recieved. Kindly wait until verfications.'
-    })
-
-
     try {
-        sess = await mongoose.startSession();
-        sess.startTransaction();
-        await newCase.save({ session: sess });
-        console.log('new case', newCase);
-
-        await existing.cases.push(newCase);
-        console.log('cases', existing.cases);
-
-        existing.save({ session: sess });
-        console.log('user', existing);
-
-        await notification.save({ session: sess });
-        console.log('notif', notification);
-
-        await sess.commitTransaction();
+        const newCase = await Case.create({
+            caseTitle: "New Application",
+            registrationFees: registrationFees,
+            aadharNo: userAadhar,
+            summary: description,
+            state,
+            district,
+            caseType: caseType,
+            status: "filed",
+            documents: documents,
+            plaintiffId: userId,
+        });
+        // Optionally update citizen's cases if needed
+        // await Citizen.updateCases(userId, newCase.id);
+        await Notification.create({
+            userId,
+            message: 'Your application is received. Kindly wait until verifications.'
+        });
+        res.status(201).json({ message: "Case created successfully", case: newCase });
     }
     catch (err) {
-        if (sess) {
-            await sess.abortTransaction();
-        }
         const error = new HttpError("New error found!", 500);
         return next(error);
     }
