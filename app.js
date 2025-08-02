@@ -12,21 +12,15 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-// PostgreSQL connection pool
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
-
-// Test database connection
-pool.connect((err, client, release) => {
-    if (err) {
+// Test PostgreSQL connection
+const { pool } = require('./config/database');
+pool.connect()
+    .then(() => {
+        console.log('Connected to PostgreSQL database!');
+    })
+    .catch(err => {
         console.error('Error connecting to PostgreSQL:', err);
-    } else {
-        console.log('Connected to PostgreSQL database');
-        release();
-    }
-});
+    });
 
 // File upload configuration for local storage (replacing GridFS)
 const storage = multer.diskStorage({
