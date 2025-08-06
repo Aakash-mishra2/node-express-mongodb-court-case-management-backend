@@ -147,9 +147,6 @@ const withdrawCase = async (req, res, next) => {
             const error = new HttpError('could not find a case by this ID', 404);
             return next(error);
         }
-        // Remove the case from plaintiff's cases (if you have a join table or array)
-        // Example: await Citizen.removeCase(deleteCase.plaintiffId, deleteID);
-        // Delete the case from the database
         await Case.deleteById(deleteID);
         res.status(201).json({ message: "Deleted Case" });
     } catch (err) {

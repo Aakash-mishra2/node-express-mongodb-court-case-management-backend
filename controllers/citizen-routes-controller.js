@@ -2,6 +2,7 @@ const Citizen = require('../models/citizen');
 const Case = require('../models/case');
 const Notification = require('../models/notifications');
 const HttpError = require('../models/http_error');
+const jwt = require('jsonwebtoken');
 
 const getUserByID = async (req, res, next) => {
     const { id } = req.params;
@@ -35,7 +36,14 @@ const createUser = async (req, res, next) => {
             addressDistrict
         });
 
-        res.status(201).json({ user: newCitizen });
+        // Generate JWT token
+        const token = jwt.sign(
+            { userId: newCitizen.id, email: newCitizen.email },
+            process.env.JWT_SECRET || 'default_secret',
+            { expiresIn: '1h' }
+        );
+
+        res.status(201).json({ user: newCitizen, token });
     } catch (err) {
         return next(new HttpError('Creating user failed, please try again.', 500));
     }
@@ -50,7 +58,14 @@ const loginUser = async (req, res, next) => {
             return next(new HttpError('Invalid credentials', 401));
         }
 
-        res.json({ user: citizen, message: 'Login successful' });
+        // Generate JWT token
+        const token = jwt.sign(
+            { userId: citizen.id, email: citizen.email },
+            process.env.JWT_SECRET || 'default_secret',
+            { expiresIn: '1h' }
+        );
+
+        res.json({ user: citizen, message: 'Login successful', token });
     } catch (err) {
         return next(new HttpError('Login failed, please try again.', 500));
     }
